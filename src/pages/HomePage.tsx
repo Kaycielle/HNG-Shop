@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Loading } from '../components/EmptyState'
 import { ReturnIcon, ShieldIcon, TruckIcon } from '../components/Icons'
+import { Price } from '../components/Price'
 import { ProductGrid } from '../components/ProductGrid'
 import { config } from '../config'
 import { getCategories, getFeaturedProducts, getProducts } from '../services/product/productService'
@@ -20,6 +21,7 @@ export function HomePage() {
   const categories = useAsync(getCategories, [])
   const featured = useAsync(() => getFeaturedProducts(4), [])
   const latest = useAsync(() => getProducts({ sort: 'rating', inStockOnly: true }), [])
+  const spotlight = featured.data?.[0]
 
   return (
     <>
@@ -27,7 +29,7 @@ export function HomePage() {
         <div className="container hero__inner">
           <div className="hero__content">
             <p className="eyebrow">100% original · Confam</p>
-            <h1 className="hero__title">Phones and gadgets you can trust.</h1>
+            <h1 className="hero__title">Phones and gadgets you can <span className="hero__accent">trust.</span></h1>
             <p className="hero__text">
               Brand-new, sealed smartphones, earbuds, smartwatches, chargers and more — with warranty, fair prices and
               free delivery on orders over {formatPrice(config.freeShippingThreshold)}.
@@ -37,10 +39,19 @@ export function HomePage() {
               <Link to="/shop?sale=1" className="btn btn--secondary btn--lg">Browse deals</Link>
             </div>
           </div>
-          <div className="hero__visual" aria-hidden="true">
-            <img src={assetUrl('images/products/nova-x5-pro.svg')} alt="" className="hero__img hero__img--main" />
-            <img src={assetUrl('images/products/airbeat-earbuds.svg')} alt="" className="hero__img hero__img--side" />
-          </div>
+          {spotlight && (
+            <Link to={`/product/${spotlight.slug}`} className="hero__card" aria-label={`Featured: ${spotlight.name}`}>
+              <span className="hero__card-top" aria-hidden="true">
+                <span><strong>Featured</strong><br />{categories.data?.find((c) => c.id === spotlight.categoryId)?.name}</span>
+                <em>Just landed</em>
+              </span>
+              <img src={spotlight.image} alt="" className="hero__card-img" />
+              <span className="hero__card-bottom">
+                <span className="hero__card-name">{spotlight.name}</span>
+                <Price product={spotlight} />
+              </span>
+            </Link>
+          )}
         </div>
       </section>
 

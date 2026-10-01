@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { config } from '../config'
+import { BrandName } from './BrandName'
 import { formatPrice } from '../utils/format'
 
 export function Footer() {
@@ -7,9 +8,9 @@ export function Footer() {
     <footer className="site-footer">
       <div className="container site-footer__grid">
         <div>
-          <Link to="/" className="logo logo--light">
+          <Link to="/" className="logo">
             <span className="logo__mark" aria-hidden="true">C</span>
-            <span className="logo__text">{config.storeName}</span>
+            <BrandName />
           </Link>
           <p className="site-footer__tagline">Original phones, gadgets and accessories, delivered across Nigeria.</p>
         </div>

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { config } from '../config'
 import { useCart } from '../context/CartContext'
+import { BrandName } from './BrandName'
 import { CartIcon, CloseIcon, MenuIcon, SearchIcon } from './Icons'
 
 const NAV_LINKS = [
@@ -56,7 +57,7 @@ export function Header() {
 
         <Link to="/" className="logo" aria-label={`${config.storeName} home`}>
           <span className="logo__mark" aria-hidden="true">C</span>
-          <span className="logo__text">{config.storeName}</span>
+          <BrandName />
         </Link>
 
         <form className="search" role="search" onSubmit={onSearch}>

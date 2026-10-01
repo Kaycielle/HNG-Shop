@@ -45,7 +45,7 @@ export function ProductCard({ product, categoryName }: { product: Product; categ
         <Price product={product} />
         <button
           type="button"
-          className={`btn ${justAdded ? 'btn--success' : 'btn--primary'} btn--block product-card__cta`}
+          className={`btn ${justAdded ? 'btn--added' : 'btn--primary'} btn--block product-card__cta`}
           disabled={!available || atLimit}
           onClick={() => {
             addItem(product, 1)
