@@ -6,8 +6,8 @@
  *   - a guest (Phase 1 — a random ID saved in this browser), or
  *   - a signed-in user (Phase 2 — the ID from Google sign-in / the database).
  *
- * When Google sign-in is added, the guest's cart can be merged into the
- * signed-in user's cart (see CartService.mergeCarts).
+ * When a guest signs in, their guest cart is merged into the signed-in
+ * user's cart (see CartContext and CartService.mergeCarts).
  */
 
 export interface User {
@@ -15,6 +15,8 @@ export interface User {
   email: string
   name: string
   avatarUrl?: string
+  /** When the account was created (ISO date string). */
+  createdAt?: string
 }
 
 export type CartOwner =

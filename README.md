@@ -24,7 +24,7 @@ src/
     order/           OrderService + OrderRepository (browser storage → database)
     checkout/        Runs the checkout steps in order
     payment/         PaymentService   (not configured → real gateway)
-    auth/            AuthService      (guest → Google sign-in)
+    auth/            AuthService      (demo accounts now → Supabase + Google sign-in)
     email/           Email content builder (sent from a server via Mailgun in Phase 2)
     devStorage.ts    TEMPORARY localStorage helper (development only)
   context/         AuthContext (who is shopping) and CartContext (their cart)
@@ -42,9 +42,19 @@ public/images/     Product illustrations (replace with real photos any time)
 | Products | `src/data/mockProducts.ts`                 | Supabase/Neon `products` table            |
 | Cart     | Browser localStorage, per guest ID         | Database, per signed-in user              |
 | Orders   | Browser localStorage                       | Created & verified on the server          |
-| Auth     | Everyone is a guest                        | Google sign-in                            |
+| Accounts | Demo accounts saved in this browser only   | Supabase Auth: email/password + Google    |
 | Payment  | Not connected — orders stay *Awaiting payment* | Real gateway + server-side verification |
 | Email    | Nothing is sent                            | Mailgun, sent by the server after payment |
+
+## Brands and accounts
+
+- **Brands:** every product has a brand (`brandId`) and an item type (`typeId`, e.g. Power banks).
+  `/brands` and the top of **Shop all** show each brand with the types it carries;
+  `/brand/:brandId` groups that brand's products by type (`?type=` narrows it).
+- **Accounts:** `/account/register`, `/account/sign-in` and `/account` (details, saved cart, orders).
+  A guest's cart moves into their account when they sign in; signing out keeps it saved.
+  In Phase 1 accounts are **demo-only** (this browser only, passwords salted + PBKDF2-hashed).
+  Swap `demoAuthService` for Supabase in `src/services/auth/authService.ts` for real accounts.
 
 ## Security notes
 

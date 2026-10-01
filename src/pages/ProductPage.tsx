@@ -11,7 +11,7 @@ import { StockBadge } from '../components/StockBadge'
 import { config } from '../config'
 import { useCart } from '../context/CartContext'
 import { getMaxQuantity, getUnitPrice, isPurchasable } from '../models/product'
-import { getCategories, getProductBySlug, getRelatedProducts } from '../services/product/productService'
+import { getBrands, getCategories, getProductBySlug, getProductTypes, getRelatedProducts } from '../services/product/productService'
 import { formatPrice, pluralize } from '../utils/format'
 import { useAsync } from '../utils/useAsync'
 import { useDocumentTitle } from '../utils/useDocumentTitle'
@@ -20,6 +20,8 @@ export function ProductPage() {
   const { slug = '' } = useParams()
   const productState = useAsync(() => getProductBySlug(slug), [slug])
   const categories = useAsync(getCategories, [])
+  const brands = useAsync(getBrands, [])
+  const types = useAsync(getProductTypes, [])
   const product = productState.data
   const related = useAsync(async () => (product ? getRelatedProducts(product) : []), [product?.id])
   const { addItem, getQuantity } = useCart()
@@ -47,6 +49,8 @@ export function ProductPage() {
   }
 
   const category = categories.data?.find((c) => c.id === product.categoryId)
+  const brand = brands.data?.find((b) => b.id === product.brandId)
+  const type = types.data?.find((t) => t.id === product.typeId)
   const available = isPurchasable(product)
   const inCart = getQuantity(product.id)
   const maxAddable = Math.max(0, getMaxQuantity(product) - inCart)
@@ -65,7 +69,8 @@ export function ProductPage() {
         <ol>
           <li><Link to="/">Home</Link></li>
           <li><Link to="/shop">Shop</Link></li>
-          {category && <li><Link to={`/shop?category=${category.id}`}>{category.name}</Link></li>}
+          {brand && <li><Link to={`/brand/${brand.id}`}>{brand.name}</Link></li>}
+          {brand && type && <li><Link to={`/brand/${brand.id}?type=${type.id}`}>{type.name}</Link></li>}
           <li aria-current="page">{product.name}</li>
         </ol>
       </nav>
@@ -77,7 +82,7 @@ export function ProductPage() {
         </div>
 
         <div className="pdp__info">
-          {category && <Link to={`/shop?category=${category.id}`} className="pdp__category">{category.name}</Link>}
+          {brand && <Link to={`/brand/${brand.id}`} className="pdp__category">{brand.name}</Link>}
           <h1 className="pdp__title">{product.name}</h1>
           <div className="pdp__meta">
             {product.rating !== undefined && <Rating value={product.rating} count={product.ratingCount} />}
@@ -133,9 +138,9 @@ export function ProductPage() {
             <section className="pdp__specs" aria-labelledby="specs-heading">
               <h2 id="specs-heading" className="pdp__specs-title">Product details</h2>
               <dl>
-                {category && (
-                  <div><dt>Category</dt><dd>{category.name}</dd></div>
-                )}
+                {brand && <div><dt>Brand</dt><dd><Link to={`/brand/${brand.id}`}>{brand.name}</Link></dd></div>}
+                {type && <div><dt>Type</dt><dd>{type.name}</dd></div>}
+                {category && <div><dt>Department</dt><dd>{category.name}</dd></div>}
                 {product.specs.map((s) => (
                   <div key={s.label}><dt>{s.label}</dt><dd>{s.value}</dd></div>
                 ))}
@@ -151,7 +156,7 @@ export function ProductPage() {
           <div className="section__head">
             <h2 id="related-heading" className="section__title">You may also like</h2>
           </div>
-          <ProductGrid products={related.data} categories={categories.data ?? []} />
+          <ProductGrid products={related.data} brands={brands.data ?? []} />
         </section>
       )}
     </div>

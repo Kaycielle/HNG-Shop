@@ -18,6 +18,7 @@ export function Footer() {
           <h2 className="site-footer__heading">Shop</h2>
           <ul>
             <li><Link to="/shop">All products</Link></li>
+            <li><Link to="/brands">Brands</Link></li>
             <li><Link to="/shop?category=phones">Phones</Link></li>
             <li><Link to="/shop?category=gadgets">Gadgets</Link></li>
             <li><Link to="/shop?category=accessories">Accessories</Link></li>

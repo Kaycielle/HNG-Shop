@@ -8,10 +8,34 @@
 
 export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
 
+/** A department of the shop: Phones, Gadgets or Accessories. */
 export interface Category {
   id: string
   name: string
   description: string
+}
+
+/** A finer kind of item inside a department, e.g. "Power banks". */
+export interface ProductType {
+  id: string
+  name: string
+  categoryId: string
+}
+
+/** The maker of a product, e.g. Samsung. */
+export interface Brand {
+  id: string
+  name: string
+  tagline: string
+}
+
+/** A brand plus what it currently offers — used for the brand showcase. */
+export interface BrandSummary extends Brand {
+  productCount: number
+  types: { type: ProductType; count: number }[]
+  /** Lowest current price across the brand's products. */
+  fromPrice: number
+  image: string
 }
 
 export interface Product {
@@ -29,6 +53,8 @@ export interface Product {
   discountPercent?: number
   image: string
   categoryId: string
+  brandId: string
+  typeId: string
   stockStatus: StockStatus
   /** How many units are available. Used to cap cart quantities. */
   stockQuantity: number

@@ -2,19 +2,22 @@
  * Makes "who is shopping" available everywhere in the app.
  *
  * `owner` is what carts and orders are attached to:
- *   - Phase 1: always a guest (random ID kept in this browser)
- *   - Phase 2: the signed-in Google user, once AuthService is connected
+ *   - a guest (random ID kept in this browser) when nobody is signed in
+ *   - the signed-in customer's account once they sign in
  */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { CartOwner, User } from '../models/user'
-import { authService, getGuestId } from '../services/auth/authService'
+import { authService, getGuestId, type RegisterInput } from '../services/auth/authService'
 
 interface AuthContextValue {
   user: User | null
   owner: CartOwner
   /** False until we know whether someone is signed in. */
   ready: boolean
-  canSignIn: boolean
+  mode: 'demo' | 'live'
+  supportsGoogle: boolean
+  register: (input: RegisterInput) => Promise<User>
+  signIn: (email: string, password: string) => Promise<User>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -27,11 +30,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [guestId] = useState(getGuestId)
 
   useEffect(() => {
+    let active = true
     authService.getCurrentUser().then((u) => {
+      if (!active) return
       setUser(u)
       setReady(true)
     })
-    return authService.onChange(setUser)
+    const stop = authService.onChange(setUser)
+    return () => {
+      active = false
+      stop()
+    }
   }, [])
 
   const value = useMemo<AuthContextValue>(() => {
@@ -40,7 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       owner,
       ready,
-      canSignIn: authService.isAvailable,
+      mode: authService.mode,
+      supportsGoogle: authService.supportsGoogle,
+      register: (input) => authService.register(input),
+      signIn: (email, password) => authService.signIn(email, password),
       signInWithGoogle: () => authService.signInWithGoogle(),
       signOut: () => authService.signOut(),
     }

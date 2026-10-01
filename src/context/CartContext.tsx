@@ -1,15 +1,17 @@
 /**
  * Makes the current owner's cart available everywhere in the app.
  *
- * - Loads the cart for the current owner (guest now, signed-in user later).
+ * - Loads the cart for the current owner (a guest, or the signed-in customer).
+ * - When a guest signs in, moves their guest cart into the account's cart so
+ *   nothing is lost. Signing out leaves the account's cart saved for next time.
  * - Applies changes with the rules in CartService.
  * - Saves every change through CartRepository (browser now, database later).
  * - Looks up live product details so prices are always current.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Cart, CartLine, CartTotals } from '../models/cart'
 import type { Product } from '../models/product'
-import { ownerKey } from '../models/user'
+import { ownerKey, type CartOwner } from '../models/user'
 import { cartRepository } from '../services/cart/cartRepository'
 import * as cartService from '../services/cart/cartService'
 import { getProductsByIds } from '../services/product/productService'
@@ -31,26 +33,31 @@ interface CartContextValue {
 const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { owner } = useAuth()
+  const { owner, ready } = useAuth()
   const key = ownerKey(owner)
   const [cart, setCart] = useState<Cart>(() => cartService.createEmptyCart(owner))
   const [loadedFor, setLoadedFor] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [productsLoading, setProductsLoading] = useState(false)
 
-  // 1. Load the saved cart whenever the owner changes (e.g. after sign-in in Phase 2).
+  // 1. Load the saved cart whenever the owner changes (first visit, sign-in,
+  //    sign-out). Waits until we know whether someone is signed in.
+  const previousOwner = useRef<CartOwner | null>(null)
   useEffect(() => {
+    if (!ready) return
+    const from = previousOwner.current
     let active = true
-    cartRepository.load(owner).then((saved) => {
+    loadCartFor(owner, from).then((loaded) => {
+      previousOwner.current = owner
       if (!active) return
-      setCart(saved ?? cartService.createEmptyCart(owner))
+      setCart(loaded)
       setLoadedFor(key)
     })
     return () => {
       active = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key])
+  }, [key, ready])
 
   // 2. Save every change — but only after the saved cart has loaded, so we
   //    never overwrite it with an empty one.
@@ -106,6 +113,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [cart, products, loadedFor, key, productsLoading, getQuantity, addItem, setQuantity, removeItem, clearCart])
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
+}
+
+/**
+ * Loads `owner`'s saved cart. If a guest has just signed in (`from` was a
+ * guest), their guest items are merged into the account cart and the guest
+ * cart is cleared.
+ */
+// Cart loads run one at a time, so a sign-in merge can never happen twice at once.
+let loadQueue: Promise<unknown> = Promise.resolve()
+
+function loadCartFor(owner: CartOwner, from: CartOwner | null): Promise<Cart> {
+  const next = loadQueue.then(() => loadAndMerge(owner, from))
+  loadQueue = next.catch(() => undefined)
+  return next
+}
+
+async function loadAndMerge(owner: CartOwner, from: CartOwner | null): Promise<Cart> {
+  let cart = (await cartRepository.load(owner)) ?? cartService.createEmptyCart(owner)
+  if (owner.kind === 'user' && from?.kind === 'guest') {
+    const guestCart = await cartRepository.load(from)
+    if (guestCart && guestCart.items.length > 0) {
+      const products = await getProductsByIds(guestCart.items.map((i) => i.productId))
+      cart = cartService.mergeCarts(cart, guestCart, products)
+      await cartRepository.save(cart)
+      await cartRepository.clear(from)
+    }
+  }
+  return cart
 }
 
 export function useCart(): CartContextValue {

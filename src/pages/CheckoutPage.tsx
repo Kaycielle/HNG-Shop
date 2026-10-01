@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { EmptyState, Loading } from '../components/EmptyState'
 import { CartIcon, InfoIcon, LockIcon } from '../components/Icons'
@@ -56,6 +56,19 @@ export function CheckoutPage() {
   const [submitError, setSubmitError] = useState('')
   const errorSummaryRef = useRef<HTMLDivElement>(null)
 
+  // Fill in name and email from the signed-in account. This runs again once
+  // the account finishes loading, but never overwrites what the customer typed.
+  useEffect(() => {
+    if (!user) return
+    const [first, ...rest] = user.name.split(' ')
+    setForm((f) => ({
+      ...f,
+      firstName: f.firstName || first,
+      lastName: f.lastName || rest.join(' '),
+      email: f.email || user.email,
+    }))
+  }, [user])
+
   if (loading && cart.items.length > 0 && lines.length === 0) {
     return <div className="container page"><Loading label="Loading checkout…" /></div>
   }
@@ -64,6 +77,12 @@ export function CheckoutPage() {
     return (
       <div className="container page">
         <h1 className="page-title">Checkout</h1>
+      {!user && (
+        <p className="checkout-signin">
+          Have an account? <Link to="/account/sign-in" state={{ from: '/checkout' }}>Sign in</Link> to save this order to your
+          order history, or <Link to="/account/register" state={{ from: '/checkout' }}>create one</Link>. You can also check out as a guest.
+        </p>
+      )}
         <EmptyState
           icon={<CartIcon width={32} height={32} />}
           title="Your cart is empty."
@@ -173,6 +192,12 @@ export function CheckoutPage() {
         </ol>
       </nav>
       <h1 className="page-title">Checkout</h1>
+      {!user && (
+        <p className="checkout-signin">
+          Have an account? <Link to="/account/sign-in" state={{ from: '/checkout' }}>Sign in</Link> to save this order to your
+          order history, or <Link to="/account/register" state={{ from: '/checkout' }}>create one</Link>. You can also check out as a guest.
+        </p>
+      )}
 
       <div className="checkout-layout">
         <form className="checkout-form" onSubmit={onSubmit} noValidate aria-describedby="required-note">

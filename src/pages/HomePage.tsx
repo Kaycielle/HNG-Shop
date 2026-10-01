@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
 import { Loading } from '../components/EmptyState'
 import { ReturnIcon, ShieldIcon, TruckIcon } from '../components/Icons'
+import { BrandStrip } from '../components/BrandShowcase'
 import { Price } from '../components/Price'
 import { ProductGrid } from '../components/ProductGrid'
 import { config } from '../config'
-import { getCategories, getFeaturedProducts, getProducts } from '../services/product/productService'
+import { getBrandSummaries, getCategories, getFeaturedProducts, getProducts } from '../services/product/productService'
 import { assetUrl } from '../utils/assets'
 import { formatPrice } from '../utils/format'
 import { useAsync } from '../utils/useAsync'
@@ -19,6 +20,7 @@ const CATEGORY_IMAGES: Record<string, string> = {
 export function HomePage() {
   useDocumentTitle()
   const categories = useAsync(getCategories, [])
+  const brands = useAsync(getBrandSummaries, [])
   const featured = useAsync(() => getFeaturedProducts(4), [])
   const latest = useAsync(() => getProducts({ sort: 'rating', inStockOnly: true }), [])
   const spotlight = featured.data?.[0]
@@ -42,7 +44,7 @@ export function HomePage() {
           {spotlight && (
             <Link to={`/product/${spotlight.slug}`} className="hero__card" aria-label={`Featured: ${spotlight.name}`}>
               <span className="hero__card-top" aria-hidden="true">
-                <span><strong>Featured</strong><br />{categories.data?.find((c) => c.id === spotlight.categoryId)?.name}</span>
+                <span><strong>Featured</strong><br />{brands.data?.find((b) => b.id === spotlight.brandId)?.name}</span>
                 <em>Just landed</em>
               </span>
               <img src={spotlight.image} alt="" className="hero__card-img" />
@@ -87,12 +89,20 @@ export function HomePage() {
         )}
       </section>
 
+      <section className="section container" aria-labelledby="brands-heading">
+        <div className="section__head">
+          <h2 id="brands-heading" className="section__title">Shop by brand</h2>
+          <Link to="/brands" className="link-arrow">All brands</Link>
+        </div>
+        {brands.loading ? <Loading /> : <BrandStrip brands={brands.data ?? []} />}
+      </section>
+
       <section className="section container" aria-labelledby="featured-heading">
         <div className="section__head">
           <h2 id="featured-heading" className="section__title">Featured products</h2>
           <Link to="/shop" className="link-arrow">Shop all</Link>
         </div>
-        {featured.loading ? <Loading /> : <ProductGrid products={featured.data ?? []} categories={categories.data ?? []} />}
+        {featured.loading ? <Loading /> : <ProductGrid products={featured.data ?? []} brands={brands.data ?? []} />}
       </section>
 
       <section className="section container">
@@ -110,7 +120,7 @@ export function HomePage() {
           <h2 id="top-rated-heading" className="section__title">Customer favourites</h2>
           <Link to="/shop?sort=rating" className="link-arrow">See top rated</Link>
         </div>
-        {latest.loading ? <Loading /> : <ProductGrid products={(latest.data ?? []).filter((p) => !featured.data?.some((f) => f.id === p.id)).slice(0, 8)} categories={categories.data ?? []} />}
+        {latest.loading ? <Loading /> : <ProductGrid products={(latest.data ?? []).filter((p) => !featured.data?.some((f) => f.id === p.id)).slice(0, 8)} brands={brands.data ?? []} />}
       </section>
     </>
   )

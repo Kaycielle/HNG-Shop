@@ -8,7 +8,7 @@ import { ProductImage } from './ProductImage'
 import { Rating } from './Rating'
 import { StockBadge } from './StockBadge'
 
-export function ProductCard({ product, categoryName }: { product: Product; categoryName?: string }) {
+export function ProductCard({ product, brandName }: { product: Product; brandName?: string }) {
   const { addItem, getQuantity } = useCart()
   const [justAdded, setJustAdded] = useState(false)
   const inCart = getQuantity(product.id)
@@ -34,7 +34,7 @@ export function ProductCard({ product, categoryName }: { product: Product; categ
         {product.discountPercent && available ? <span className="product-card__flag">Sale</span> : null}
       </Link>
       <div className="product-card__body">
-        {categoryName && <p className="product-card__category">{categoryName}</p>}
+        {brandName && <p className="product-card__category">{brandName}</p>}
         <h3 className="product-card__title">
           <Link to={href}>{product.name}</Link>
         </h3>

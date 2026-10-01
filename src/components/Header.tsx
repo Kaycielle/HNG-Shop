@@ -1,12 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { config } from '../config'
+import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { BrandName } from './BrandName'
-import { CartIcon, CloseIcon, MenuIcon, SearchIcon } from './Icons'
+import { CartIcon, CloseIcon, MenuIcon, SearchIcon, UserIcon } from './Icons'
 
 const NAV_LINKS = [
   { to: '/shop', label: 'Shop all' },
+  { to: '/brands', label: 'Brands' },
   { to: '/shop?category=phones', label: 'Phones' },
   { to: '/shop?category=gadgets', label: 'Gadgets' },
   { to: '/shop?category=accessories', label: 'Accessories' },
@@ -15,6 +17,7 @@ const NAV_LINKS = [
 
 export function Header() {
   const { cart } = useCart()
+  const { user } = useAuth()
   const count = cart.items.reduce((sum, i) => sum + i.quantity, 0)
   const navigate = useNavigate()
   const location = useLocation()
@@ -36,6 +39,7 @@ export function Header() {
 
   // A nav link is "current" when its category and sale filter match the page's.
   const isActive = (to: string) => {
+    if (to === '/brands') return location.pathname === '/brands' || location.pathname.startsWith('/brand/')
     if (location.pathname !== '/shop') return false
     const linkParams = new URLSearchParams(to.split('?')[1] ?? '')
     return ['category', 'sale'].every((key) => linkParams.get(key) === params.get(key))
@@ -76,11 +80,21 @@ export function Header() {
           </button>
         </form>
 
+        <div className="header-actions">
+        <NavLink
+          to={user ? '/account' : '/account/sign-in'}
+          className="cart-link account-link"
+          aria-label={user ? `My account, signed in as ${user.name}` : 'Sign in or create an account'}
+        >
+          <UserIcon width={22} height={22} />
+          <span className="cart-link__label" aria-hidden="true">{user ? user.name.split(' ')[0] : 'Sign in'}</span>
+        </NavLink>
         <NavLink to="/cart" className="cart-link" aria-label={`Cart, ${count} ${count === 1 ? 'item' : 'items'}`}>
           <CartIcon width={22} height={22} />
           <span className="cart-link__label" aria-hidden="true">Cart</span>
           {count > 0 && <span className="cart-link__count" aria-hidden="true">{count > 99 ? '99+' : count}</span>}
         </NavLink>
+        </div>
       </div>
 
       <nav id="primary-nav" className={`primary-nav${menuOpen ? ' primary-nav--open' : ''}`} aria-label="Main">
