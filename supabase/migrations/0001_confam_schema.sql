@@ -26,6 +26,7 @@ create table if not exists public.categories (
   description text not null default '',
   sort_order  int  not null default 0
 );
+alter table public.categories enable row level security;
 
 create table if not exists public.product_types (
   id          text primary key,
@@ -33,6 +34,7 @@ create table if not exists public.product_types (
   category_id text not null references public.categories (id),
   sort_order  int  not null default 0
 );
+alter table public.product_types enable row level security;
 
 create table if not exists public.brands (
   id         text primary key,
@@ -40,6 +42,7 @@ create table if not exists public.brands (
   tagline    text not null default '',
   sort_order int  not null default 0
 );
+alter table public.brands enable row level security;
 
 create table if not exists public.products (
   id                text primary key,
@@ -63,6 +66,7 @@ create table if not exists public.products (
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now()
 );
+alter table public.products enable row level security;
 
 create index if not exists products_brand_idx on public.products (brand_id);
 create index if not exists products_type_idx  on public.products (type_id);
@@ -88,6 +92,7 @@ create table if not exists public.profiles (
   email      text not null default '',
   created_at timestamptz not null default now()
 );
+alter table public.profiles enable row level security;
 
 -- Create the profile automatically when someone signs up (email or Google).
 create or replace function public.handle_new_user()
@@ -117,6 +122,7 @@ create table if not exists public.cart_items (
   added_at   timestamptz not null default now(),
   primary key (user_id, product_id)
 );
+alter table public.cart_items enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- Orders
@@ -146,6 +152,7 @@ create table if not exists public.orders (
   created_at        timestamptz not null default now(),
   check (user_id is not null or guest_id is not null)
 );
+alter table public.orders enable row level security;
 
 create index if not exists orders_user_idx on public.orders (user_id, created_at desc);
 
@@ -160,18 +167,12 @@ create table if not exists public.order_items (
   line_total   integer not null check (line_total >= 0),
   primary key (order_id, product_id)
 );
+alter table public.order_items enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- Row Level Security
 -- ---------------------------------------------------------------------------
-alter table public.categories    enable row level security;
-alter table public.product_types enable row level security;
-alter table public.brands        enable row level security;
-alter table public.products      enable row level security;
-alter table public.profiles      enable row level security;
-alter table public.cart_items    enable row level security;
-alter table public.orders        enable row level security;
-alter table public.order_items   enable row level security;
+-- (Row Level Security is switched on right after each table is created, above.)
 
 -- Catalogue: read-only for everyone.
 drop policy if exists "catalogue: anyone can read categories" on public.categories;
