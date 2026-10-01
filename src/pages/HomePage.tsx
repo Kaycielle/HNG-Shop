@@ -1,0 +1,106 @@
+import { Link } from 'react-router-dom'
+import { Loading } from '../components/EmptyState'
+import { ReturnIcon, ShieldIcon, TruckIcon } from '../components/Icons'
+import { ProductGrid } from '../components/ProductGrid'
+import { config } from '../config'
+import { getCategories, getFeaturedProducts, getProducts } from '../services/product/productService'
+import { formatPrice } from '../utils/format'
+import { useAsync } from '../utils/useAsync'
+import { useDocumentTitle } from '../utils/useDocumentTitle'
+
+const CATEGORY_IMAGES: Record<string, string> = {
+  electronics: '/images/products/aura-headphones.svg',
+  fashion: '/images/products/urban-sneakers.svg',
+  accessories: '/images/products/leather-backpack.svg',
+  home: '/images/products/nordic-desk-lamp.svg',
+}
+
+export function HomePage() {
+  useDocumentTitle()
+  const categories = useAsync(getCategories, [])
+  const featured = useAsync(() => getFeaturedProducts(4), [])
+  const latest = useAsync(() => getProducts({ sort: 'rating', inStockOnly: true }), [])
+
+  return (
+    <>
+      <section className="hero">
+        <div className="container hero__inner">
+          <div className="hero__content">
+            <p className="eyebrow">New season essentials</p>
+            <h1 className="hero__title">Everyday things, made better.</h1>
+            <p className="hero__text">
+              Shop headphones, watches, bags, clothing and home pieces we love — at fair prices, with free delivery on
+              orders over {formatPrice(config.freeShippingThreshold)}.
+            </p>
+            <div className="hero__actions">
+              <Link to="/shop" className="btn btn--primary btn--lg">Shop all products</Link>
+              <Link to="/shop?sale=1" className="btn btn--secondary btn--lg">Browse deals</Link>
+            </div>
+          </div>
+          <div className="hero__visual" aria-hidden="true">
+            <img src="/images/products/aura-headphones.svg" alt="" className="hero__img hero__img--main" />
+            <img src="/images/products/analog-watch.svg" alt="" className="hero__img hero__img--side" />
+          </div>
+        </div>
+      </section>
+
+      <section className="usp" aria-label="Why shop with us">
+        <ul className="container usp__list">
+          <li className="usp__item"><TruckIcon /><div><strong>Fast delivery</strong><span>Nationwide, 2–5 working days</span></div></li>
+          <li className="usp__item"><ShieldIcon /><div><strong>Secure checkout</strong><span>Your details stay protected</span></div></li>
+          <li className="usp__item"><ReturnIcon /><div><strong>Easy returns</strong><span>14 days to change your mind</span></div></li>
+        </ul>
+      </section>
+
+      <section className="section container" aria-labelledby="categories-heading">
+        <div className="section__head">
+          <h2 id="categories-heading" className="section__title">Shop by category</h2>
+          <Link to="/shop" className="link-arrow">View all</Link>
+        </div>
+        {categories.loading ? (
+          <Loading />
+        ) : (
+          <ul className="category-grid" role="list">
+            {categories.data?.map((c) => (
+              <li key={c.id}>
+                <Link to={`/shop?category=${c.id}`} className="category-card">
+                  <img src={CATEGORY_IMAGES[c.id] ?? '/favicon.svg'} alt="" className="category-card__img" loading="lazy" />
+                  <span className="category-card__body">
+                    <span className="category-card__name">{c.name}</span>
+                    <span className="category-card__desc">{c.description}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="section container" aria-labelledby="featured-heading">
+        <div className="section__head">
+          <h2 id="featured-heading" className="section__title">Featured products</h2>
+          <Link to="/shop" className="link-arrow">Shop all</Link>
+        </div>
+        {featured.loading ? <Loading /> : <ProductGrid products={featured.data ?? []} categories={categories.data ?? []} />}
+      </section>
+
+      <section className="section container">
+        <div className="promo">
+          <div>
+            <h2 className="promo__title">Up to 20% off selected favourites</h2>
+            <p className="promo__text">Sneakers, headphones, bags and more — while stocks last.</p>
+          </div>
+          <Link to="/shop?sale=1" className="btn btn--light btn--lg">See the deals</Link>
+        </div>
+      </section>
+
+      <section className="section container" aria-labelledby="top-rated-heading">
+        <div className="section__head">
+          <h2 id="top-rated-heading" className="section__title">Customer favourites</h2>
+          <Link to="/shop?sort=rating" className="link-arrow">See top rated</Link>
+        </div>
+        {latest.loading ? <Loading /> : <ProductGrid products={(latest.data ?? []).slice(0, 8)} categories={categories.data ?? []} />}
+      </section>
+    </>
+  )
+}
