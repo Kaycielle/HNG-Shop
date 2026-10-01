@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { AuthError } from '../services/auth/authService'
+import { supabaseSetup } from '../services/supabase/client'
 import { GoogleIcon, InfoIcon } from './Icons'
 
 /** Shared frame for the sign-in and create-account pages. */
@@ -31,6 +32,9 @@ export function AuthLayout({ title, subtitle, children, footer }: { title: strin
             <span>
               <strong>Demo accounts.</strong> While we finish connecting our secure account system, accounts are saved in
               this browser only. Please don’t reuse a password you use anywhere else.
+              {!supabaseSetup.connected && (
+                <span className="auth-card__setup">Setup check: {supabaseSetup.problems.join('; ')}.</span>
+              )}
             </span>
           </div>
         )}

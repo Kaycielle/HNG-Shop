@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { config } from '../config'
+import { buildId } from '../services/supabase/client'
 import { BrandName } from './BrandName'
 import { formatPrice } from '../utils/format'
 
@@ -42,6 +43,7 @@ export function Footer() {
       </div>
       <div className="container site-footer__bottom">
         <p>© {new Date().getFullYear()} {config.storeName}. All rights reserved.</p>
+        <p className="site-footer__build">Build {buildId}</p>
       </div>
     </footer>
   )

@@ -1067,3 +1067,7 @@ select.input { padding-right: 36px; }
 .type-tile__img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: var(--radius); margin-bottom: 10px; }
 .type-tile__name { font-family: var(--font-display); font-weight: 700; color: var(--white); padding: 0 4px; }
 .type-tile__count { font-size: 0.8rem; color: var(--text-muted); padding: 0 4px; }
+
+.auth-card__setup { display: block; margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); }
+.site-footer__bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; }
+.site-footer__build { color: rgba(255, 255, 255, 0.35); font-size: 0.75rem; }
