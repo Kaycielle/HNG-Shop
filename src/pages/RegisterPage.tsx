@@ -20,9 +20,26 @@ export function RegisterPage() {
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({})
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [confirmEmailFor, setConfirmEmailFor] = useState('')
 
   if (!ready) return <div className="container page"><Loading /></div>
   if (user && !submitting) return <Navigate to={returnTo} replace />
+
+  if (confirmEmailFor) {
+    return (
+      <div className="container page auth-page">
+        <div className="auth-card" role="status">
+          <p className="eyebrow">Almost there</p>
+          <h1 className="auth-card__title">Check your email</h1>
+          <p className="page-subtitle">
+            We’ve sent a confirmation link to <strong>{confirmEmailFor}</strong>. Click it to activate your account, then
+            sign in. It can take a minute to arrive — check your spam folder too.
+          </p>
+          <Link to="/account/sign-in" state={{ from: returnTo }} className="btn btn--primary btn--lg btn--block">Go to sign in</Link>
+        </div>
+      </div>
+    )
+  }
 
   const validate = (f: Record<Field, string>) => ({
     name: validateName(f.name),
@@ -54,7 +71,12 @@ export function RegisterPage() {
     }
     setSubmitting(true)
     try {
-      await register({ name: form.name, email: form.email, password: form.password })
+      const result = await register({ name: form.name, email: form.email, password: form.password })
+      if (result.needsEmailConfirmation) {
+        setConfirmEmailFor(form.email.trim())
+        setSubmitting(false)
+        return
+      }
       navigate(returnTo, { replace: true })
     } catch (err) {
       setFormError(err instanceof AuthError ? err.message : 'Sorry, we couldn’t create your account. Please try again.')

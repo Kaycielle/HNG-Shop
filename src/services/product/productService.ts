@@ -1,12 +1,10 @@
 /**
- * ProductService — the ONLY place the app gets product data from.
+ * ProductService — the ONLY place pages get product data from.
  *
- * Phase 1: reads the mock data in data/mockProducts.ts.
- * Phase 2: replace the bodies of these functions with database queries
- *          (e.g. supabase.from('products').select(...)). Every function is
- *          already async, so pages and components will not need to change.
+ * The data itself comes from catalogSource.ts: the Supabase database when it
+ * is connected, otherwise the built-in sample catalogue. Every function is
+ * async, so pages never need to know which one is in use.
  */
-import { mockBrands, mockCategories, mockProductTypes, mockProducts } from '../../data/mockProducts'
 import {
   getUnitPrice,
   isPurchasable,
@@ -16,6 +14,7 @@ import {
   type Product,
   type ProductType,
 } from '../../models/product'
+import { getCatalog } from './catalogSource'
 
 export type ProductSort = 'featured' | 'price-asc' | 'price-desc' | 'rating' | 'name'
 
@@ -38,19 +37,19 @@ export const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
 ]
 
 export async function getCategories(): Promise<Category[]> {
-  return mockCategories
+  return (await getCatalog()).categories
 }
 
 export async function getProductTypes(): Promise<ProductType[]> {
-  return mockProductTypes
+  return (await getCatalog()).types
 }
 
 export async function getBrands(): Promise<Brand[]> {
-  return mockBrands
+  return (await getCatalog()).brands
 }
 
 export async function getBrand(brandId: string): Promise<Brand | null> {
-  return mockBrands.find((b) => b.id === brandId) ?? null
+  return (await getCatalog()).brands.find((b) => b.id === brandId) ?? null
 }
 
 /**
@@ -58,17 +57,18 @@ export async function getBrand(brandId: string): Promise<Brand | null> {
  * types (Phones, Power banks…), its lowest price and a showcase image.
  */
 export async function getBrandSummaries(): Promise<BrandSummary[]> {
-  return mockBrands
+  const { brands, products: allProducts, types } = await getCatalog()
+  return brands
     .map((brand) => {
-      const products = mockProducts.filter((p) => p.brandId === brand.id)
-      const types = mockProductTypes
+      const products = allProducts.filter((p) => p.brandId === brand.id)
+      const brandTypes = types
         .map((type) => ({ type, count: products.filter((p) => p.typeId === type.id).length }))
         .filter((t) => t.count > 0)
       const showcase = products.find((p) => p.featured && isPurchasable(p)) ?? products.find(isPurchasable) ?? products[0]
       return {
         ...brand,
         productCount: products.length,
-        types,
+        types: brandTypes,
         fromPrice: Math.min(...products.map(getUnitPrice)),
         image: showcase?.image ?? '',
       }
@@ -77,12 +77,13 @@ export async function getBrandSummaries(): Promise<BrandSummary[]> {
 }
 
 export async function getProducts(query: ProductQuery = {}): Promise<Product[]> {
+  const { categories, brands, types, products } = await getCatalog()
   const search = query.search?.trim().toLowerCase() ?? ''
-  const categoryNames = new Map(mockCategories.map((c) => [c.id, c.name.toLowerCase()]))
-  const brandNames = new Map(mockBrands.map((b) => [b.id, b.name.toLowerCase()]))
-  const typeNames = new Map(mockProductTypes.map((t) => [t.id, t.name.toLowerCase()]))
+  const categoryNames = new Map(categories.map((c) => [c.id, c.name.toLowerCase()]))
+  const brandNames = new Map(brands.map((b) => [b.id, b.name.toLowerCase()]))
+  const typeNames = new Map(types.map((t) => [t.id, t.name.toLowerCase()]))
 
-  const results = mockProducts.filter((p) => {
+  const results = products.filter((p) => {
     if (query.categoryId && p.categoryId !== query.categoryId) return false
     if (query.brandId && p.brandId !== query.brandId) return false
     if (query.typeId && p.typeId !== query.typeId) return false
@@ -109,22 +110,22 @@ export async function getProducts(query: ProductQuery = {}): Promise<Product[]> 
 }
 
 export async function getFeaturedProducts(limit = 4): Promise<Product[]> {
-  return mockProducts.filter((p) => p.featured && isPurchasable(p)).slice(0, limit)
+  return (await getCatalog()).products.filter((p) => p.featured && isPurchasable(p)).slice(0, limit)
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  return mockProducts.find((p) => p.slug === slug) ?? null
+  return (await getCatalog()).products.find((p) => p.slug === slug) ?? null
 }
 
 /** Used by the cart to look up the current details of the products in it. */
 export async function getProductsByIds(ids: string[]): Promise<Product[]> {
   const wanted = new Set(ids)
-  return mockProducts.filter((p) => wanted.has(p.id))
+  return (await getCatalog()).products.filter((p) => wanted.has(p.id))
 }
 
 /** Same brand first, then the same type of item from other brands. */
 export async function getRelatedProducts(product: Product, limit = 4): Promise<Product[]> {
-  const others = mockProducts.filter((p) => p.id !== product.id)
+  const others = (await getCatalog()).products.filter((p) => p.id !== product.id)
   const sameBrand = others.filter((p) => p.brandId === product.brandId)
   const sameType = others.filter((p) => p.typeId === product.typeId && p.brandId !== product.brandId)
   return [...sameBrand, ...sameType].slice(0, limit)

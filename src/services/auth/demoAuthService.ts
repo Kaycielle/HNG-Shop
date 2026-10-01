@@ -80,7 +80,7 @@ export const demoAuthService: AuthService = {
     devStorage.set(SESSION_KEY, account.id)
     const user = toUser(account)
     notify(user)
-    return user
+    return { user, needsEmailConfirmation: false }
   },
 
   async signIn(email, password) {

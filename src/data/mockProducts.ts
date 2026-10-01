@@ -8,9 +8,11 @@
  *
  * Prices, stock levels, ratings and specs are SAMPLE values for development.
  * Replace them with Confam NG's real stock before going live.
+ *
+ * This same data is loaded into Supabase by supabase/seed.sql
+ * (regenerate it with `npm run db:seed`).
  */
 import type { Brand, Category, Product, ProductType, StockStatus } from '../models/product'
-import { assetUrl } from '../utils/assets'
 
 export const mockCategories: Category[] = [
   { id: 'phones', name: 'Phones', description: 'Smartphones for every budget, brand-new and sealed' },
@@ -65,7 +67,8 @@ function product(input: ProductInput): Product {
   const stockStatus: StockStatus = stock === 0 ? 'out_of_stock' : stock <= 5 ? 'low_stock' : 'in_stock'
   return {
     ...rest,
-    image: assetUrl(`images/products/${input.slug}.svg`),
+    // A path inside the site; ProductService turns it into a full URL.
+    image: `images/products/${input.slug}.svg`,
     categoryId: categoryOf[input.typeId],
     stockQuantity: stock,
     stockStatus,

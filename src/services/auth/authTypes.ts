@@ -7,13 +7,20 @@ export interface RegisterInput {
   password: string
 }
 
+export interface RegisterResult {
+  /** The new, signed-in customer — or null while they still need to confirm their email. */
+  user: User | null
+  /** True when the account was created but the customer must click the link in their inbox first. */
+  needsEmailConfirmation: boolean
+}
+
 export interface AuthService {
   /** 'demo' = browser-only accounts (Phase 1); 'live' = real account server. */
   readonly mode: 'demo' | 'live'
   /** True once "Continue with Google" is connected. */
   readonly supportsGoogle: boolean
   getCurrentUser(): Promise<User | null>
-  register(input: RegisterInput): Promise<User>
+  register(input: RegisterInput): Promise<RegisterResult>
   signIn(email: string, password: string): Promise<User>
   signInWithGoogle(): Promise<void>
   signOut(): Promise<void>

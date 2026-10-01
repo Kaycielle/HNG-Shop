@@ -1,17 +1,16 @@
 /**
  * CheckoutService — runs the steps of placing an order, in order.
  *
- *   Phase 1: validate → create pending order → save → ask PaymentService
- *   Phase 2: the same steps, but "save" goes to the database and the
- *            PaymentService returns a real gateway redirect. Verification,
- *            marking as paid and the confirmation email happen on the server.
+ *   validate → create the pending order (database or browser) → ask PaymentService
+ *
+ * Next: PaymentService returns a real gateway redirect. Verification, marking
+ * as paid and the confirmation email happen on the server.
  */
 import type { CartLine, CartTotals } from '../../models/cart'
 import type { CustomerInfo, DeliveryInfo, Order } from '../../models/order'
 import { isPurchasable } from '../../models/product'
 import type { CartOwner, User } from '../../models/user'
-import { orderRepository } from '../order/orderRepository'
-import { createPendingOrder } from '../order/orderService'
+import { OrderError, orderRepository } from '../order/orderRepository'
 import { startPayment, type PaymentStartResult } from '../payment/paymentService'
 
 export interface PlaceOrderInput {
@@ -37,12 +36,16 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     throw new CheckoutError(`"${unavailable.product.name}" is no longer available. Please remove it from your cart.`)
   }
 
-  const order = createPendingOrder(input)
-  await orderRepository.save(order)
-
-  const payment = await startPayment(order)
-  if (payment.kind === 'redirect') {
-    await orderRepository.save({ ...order, paymentReference: payment.reference })
+  let order
+  try {
+    order = await orderRepository.place(input)
+  } catch (err) {
+    // Out of stock, missing details… — show the database's message to the customer.
+    if (err instanceof OrderError) throw new CheckoutError(err.message)
+    throw err
   }
+
+  // Phase 2: the payment reference is recorded by the server when it creates the transaction.
+  const payment = await startPayment(order)
   return { order, payment }
 }

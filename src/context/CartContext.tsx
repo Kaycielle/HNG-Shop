@@ -43,16 +43,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // 1. Load the saved cart whenever the owner changes (first visit, sign-in,
   //    sign-out). Waits until we know whether someone is signed in.
   const previousOwner = useRef<CartOwner | null>(null)
+  const lastSynced = useRef<Cart | null>(null)
+  const loadFailed = useRef(false)
   useEffect(() => {
     if (!ready) return
     const from = previousOwner.current
     let active = true
-    loadCartFor(owner, from).then((loaded) => {
-      previousOwner.current = owner
-      if (!active) return
-      setCart(loaded)
-      setLoadedFor(key)
-    })
+    loadCartFor(owner, from)
+      .then((loaded) => {
+        previousOwner.current = owner
+        if (!active) return
+        loadFailed.current = false
+        lastSynced.current = loaded
+        setCart(loaded)
+        setLoadedFor(key)
+      })
+      .catch((err) => {
+        // Couldn't reach the saved cart (e.g. offline). Show an empty cart but
+        // don't save over the real one.
+        console.error('Could not load your saved cart:', err)
+        if (!active) return
+        loadFailed.current = true
+        setCart(cartService.createEmptyCart(owner))
+        setLoadedFor(key)
+      })
     return () => {
       active = false
     }
@@ -62,7 +76,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // 2. Save every change — but only after the saved cart has loaded, so we
   //    never overwrite it with an empty one.
   useEffect(() => {
-    if (loadedFor === key && ownerKey(cart.owner) === key) void cartRepository.save(cart)
+    if (loadedFor !== key || ownerKey(cart.owner) !== key) return
+    if (loadFailed.current || cart === lastSynced.current) return // nothing new to save
+    lastSynced.current = cart
+    cartRepository.save(cart).catch((err) => console.error('Could not save your cart:', err))
   }, [cart, key, loadedFor])
 
   // 3. Fetch the current details of the products in the cart.

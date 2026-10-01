@@ -1,10 +1,23 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { AuthError } from '../services/auth/authService'
 import { GoogleIcon, InfoIcon } from './Icons'
 
 /** Shared frame for the sign-in and create-account pages. */
 export function AuthLayout({ title, subtitle, children, footer }: { title: string; subtitle: string; children: ReactNode; footer: ReactNode }) {
   const { mode, supportsGoogle, signInWithGoogle } = useAuth()
+  const [googleBusy, setGoogleBusy] = useState(false)
+  const [googleError, setGoogleError] = useState('')
+  const onGoogle = async () => {
+    setGoogleError('')
+    setGoogleBusy(true)
+    try {
+      await signInWithGoogle() // leaves the page for Google on success
+    } catch (err) {
+      setGoogleError(err instanceof AuthError ? err.message : 'Google sign-in didn’t work. Please try again or use your email.')
+      setGoogleBusy(false)
+    }
+  }
   return (
     <div className="container page auth-page">
       <div className="auth-card">
@@ -22,11 +35,12 @@ export function AuthLayout({ title, subtitle, children, footer }: { title: strin
           </div>
         )}
 
-        {/* Google sign-in is wired through AuthService and switches on in Phase 2. */}
-        <button type="button" className="btn btn--secondary btn--block btn--lg" disabled={!supportsGoogle} onClick={() => void signInWithGoogle()}>
+        {/* Google sign-in goes through AuthService; it's switched on when Supabase is connected. */}
+        <button type="button" className="btn btn--secondary btn--block btn--lg" disabled={!supportsGoogle || googleBusy} onClick={onGoogle}>
           <GoogleIcon width={18} height={18} /> Continue with Google
         </button>
         {!supportsGoogle && <p className="field-hint auth-card__soon">Google sign-in is coming soon.</p>}
+        {googleError && <div className="notice notice--error" role="alert">{googleError}</div>}
 
         <div className="auth-card__divider"><span>or use your email</span></div>
         {children}

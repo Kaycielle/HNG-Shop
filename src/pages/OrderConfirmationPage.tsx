@@ -1,12 +1,11 @@
 /**
  * Order confirmation page.
  *
- * Phase 1: reads the order saved in this browser by OrderRepository. Because
- * no payment gateway is connected, the order is shown honestly as
- * "Awaiting payment".
- * Phase 2: the customer lands here after the payment gateway redirects back.
- * The page will load the order from the database, where the server has
- * already verified the payment and set paymentStatus to 'paid'.
+ * Reads the order through OrderRepository (the database when Supabase is
+ * connected). Until a payment gateway is connected, orders are shown honestly
+ * as "Awaiting payment".
+ * Next: the customer lands here after the payment gateway redirects back; by
+ * then the server has verified the payment and set paymentStatus to 'paid'.
  */
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { EmptyState, Loading } from '../components/EmptyState'
@@ -14,6 +13,7 @@ import { CheckIcon, InfoIcon } from '../components/Icons'
 import { ProductImage } from '../components/ProductImage'
 import { SummaryTotals } from '../components/SummaryTotals'
 import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from '../models/order'
+import { useAuth } from '../context/AuthContext'
 import { orderRepository } from '../services/order/orderRepository'
 import { formatDate, formatPrice } from '../utils/format'
 import { useAsync } from '../utils/useAsync'
@@ -23,10 +23,14 @@ export function OrderConfirmationPage() {
   const { orderId = '' } = useParams()
   const location = useLocation()
   const notice = (location.state as { notice?: string } | null)?.notice
-  const { data: order, loading } = useAsync(() => orderRepository.getById(orderId), [orderId])
+  const { owner, ready } = useAuth()
+  const { data: order, loading } = useAsync(
+    async () => (ready ? orderRepository.getById(orderId, owner) : null),
+    [orderId, ready, owner.kind, owner.id],
+  )
   useDocumentTitle(order ? `Order ${order.id}` : 'Order')
 
-  if (loading) return <div className="container page"><Loading label="Loading your order…" /></div>
+  if (loading || !ready) return <div className="container page"><Loading label="Loading your order…" /></div>
 
   if (!order) {
     return (

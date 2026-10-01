@@ -7,7 +7,7 @@
  */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { CartOwner, User } from '../models/user'
-import { authService, getGuestId, type RegisterInput } from '../services/auth/authService'
+import { authService, getGuestId, type RegisterInput, type RegisterResult } from '../services/auth/authService'
 
 interface AuthContextValue {
   user: User | null
@@ -16,7 +16,7 @@ interface AuthContextValue {
   ready: boolean
   mode: 'demo' | 'live'
   supportsGoogle: boolean
-  register: (input: RegisterInput) => Promise<User>
+  register: (input: RegisterInput) => Promise<RegisterResult>
   signIn: (email: string, password: string) => Promise<User>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>

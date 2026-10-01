@@ -4,20 +4,21 @@
  * The rest of the app only talks to the `AuthService` interface (through
  * AuthContext), so the provider behind it can change without touching pages.
  *
- * Phase 1 (now): `demoAuthService` — accounts are saved in THIS BROWSER ONLY.
- *   Good for trying the flow; not a real, secure account system.
- * Phase 2: replace with Supabase Auth (email + password and Google sign-in via
- *   Google Cloud Console). Accounts then live on a secure server and work on
- *   any device. Only the last line of this file changes.
+ * - Supabase connected (VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY set):
+ *   `supabaseAuthService` — real, secure accounts that work on any device,
+ *   with email + password and Google sign-in.
+ * - Not connected: `demoAuthService` — accounts saved in THIS BROWSER ONLY,
+ *   so the flow can still be tried. Every sign-in page says so.
  */
 import { devStorage, randomId } from '../devStorage'
 import type { AuthService } from './authTypes'
+import { supabase } from '../supabase/client'
 import { demoAuthService } from './demoAuthService'
+import { supabaseAuthService } from './supabaseAuthService'
 
-export { AuthError, type AuthService, type RegisterInput } from './authTypes'
+export { AuthError, type AuthService, type RegisterInput, type RegisterResult } from './authTypes'
 
-// Phase 2: replace with the Supabase implementation.
-export const authService: AuthService = demoAuthService
+export const authService: AuthService = supabase ? supabaseAuthService : demoAuthService
 
 /** A stable ID for this browser's guest shopper (used before signing in). */
 export function getGuestId(): string {
