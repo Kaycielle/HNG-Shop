@@ -740,3 +740,6 @@ select.input { padding-right: 36px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation-duration: 0.01ms !important; }
 }
+
+.confirm-inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 0.9rem; }
+.confirm-inline span { color: var(--color-text-muted); }

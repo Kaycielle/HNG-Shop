@@ -7,6 +7,7 @@
  * change.
  */
 import type { Category, Product } from '../models/product'
+import { assetUrl } from '../utils/assets'
 
 export const mockCategories: Category[] = [
   { id: 'electronics', name: 'Electronics', description: 'Audio, wearables and everyday tech' },
@@ -15,7 +16,7 @@ export const mockCategories: Category[] = [
   { id: 'home', name: 'Home & Living', description: 'Pieces that make a house feel like home' },
 ]
 
-const img = (name: string) => `/images/products/${name}.svg`
+const img = (name: string) => assetUrl(`images/products/${name}.svg`)
 
 export const mockProducts: Product[] = [
   {

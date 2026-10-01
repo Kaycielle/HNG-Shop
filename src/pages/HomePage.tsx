@@ -4,15 +4,16 @@ import { ReturnIcon, ShieldIcon, TruckIcon } from '../components/Icons'
 import { ProductGrid } from '../components/ProductGrid'
 import { config } from '../config'
 import { getCategories, getFeaturedProducts, getProducts } from '../services/product/productService'
+import { assetUrl } from '../utils/assets'
 import { formatPrice } from '../utils/format'
 import { useAsync } from '../utils/useAsync'
 import { useDocumentTitle } from '../utils/useDocumentTitle'
 
 const CATEGORY_IMAGES: Record<string, string> = {
-  electronics: '/images/products/aura-headphones.svg',
-  fashion: '/images/products/urban-sneakers.svg',
-  accessories: '/images/products/leather-backpack.svg',
-  home: '/images/products/nordic-desk-lamp.svg',
+  electronics: assetUrl('images/products/aura-headphones.svg'),
+  fashion: assetUrl('images/products/urban-sneakers.svg'),
+  accessories: assetUrl('images/products/leather-backpack.svg'),
+  home: assetUrl('images/products/nordic-desk-lamp.svg'),
 }
 
 export function HomePage() {
@@ -38,8 +39,8 @@ export function HomePage() {
             </div>
           </div>
           <div className="hero__visual" aria-hidden="true">
-            <img src="/images/products/aura-headphones.svg" alt="" className="hero__img hero__img--main" />
-            <img src="/images/products/analog-watch.svg" alt="" className="hero__img hero__img--side" />
+            <img src={assetUrl('images/products/aura-headphones.svg')} alt="" className="hero__img hero__img--main" />
+            <img src={assetUrl('images/products/analog-watch.svg')} alt="" className="hero__img hero__img--side" />
           </div>
         </div>
       </section>
@@ -64,7 +65,7 @@ export function HomePage() {
             {categories.data?.map((c) => (
               <li key={c.id}>
                 <Link to={`/shop?category=${c.id}`} className="category-card">
-                  <img src={CATEGORY_IMAGES[c.id] ?? '/favicon.svg'} alt="" className="category-card__img" loading="lazy" />
+                  <img src={CATEGORY_IMAGES[c.id] ?? assetUrl('favicon.svg')} alt="" className="category-card__img" loading="lazy" />
                   <span className="category-card__body">
                     <span className="category-card__name">{c.name}</span>
                     <span className="category-card__desc">{c.description}</span>

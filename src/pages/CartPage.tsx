@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { EmptyState, Loading } from '../components/EmptyState'
 import { CartIcon, LockIcon, TrashIcon } from '../components/Icons'
@@ -13,6 +14,7 @@ import { useDocumentTitle } from '../utils/useDocumentTitle'
 export function CartPage() {
   useDocumentTitle('Your cart')
   const { lines, totals, loading, setQuantity, removeItem, clearCart, cart } = useCart()
+  const [confirmingClear, setConfirmingClear] = useState(false)
 
   if (loading && cart.items.length > 0 && lines.length === 0) {
     return <div className="container page"><Loading label="Loading your cart…" /></div>
@@ -38,9 +40,21 @@ export function CartPage() {
     <div className="container page">
       <header className="page-header page-header--row">
         <h1 className="page-title">Your cart <span className="page-title__count">({pluralize(totals.itemCount, 'item')})</span></h1>
-        <button type="button" className="btn-link btn-link--danger" onClick={() => { if (window.confirm('Remove all items from your cart?')) clearCart() }}>
-          Empty cart
-        </button>
+        {confirmingClear ? (
+          <div className="confirm-inline" role="group" aria-label="Confirm emptying your cart">
+            <span>Remove all items?</span>
+            <button type="button" className="btn-link btn-link--danger" onClick={() => { clearCart(); setConfirmingClear(false) }}>
+              Yes, empty cart
+            </button>
+            <button type="button" className="btn-link" onClick={() => setConfirmingClear(false)} autoFocus>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="btn-link btn-link--danger" onClick={() => setConfirmingClear(true)}>
+            Empty cart
+          </button>
+        )}
       </header>
 
       <div className="cart-layout">
