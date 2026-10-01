@@ -1,36 +1,101 @@
 /**
- * Order confirmation page.
+ * Order page — also where Paystack sends the customer back after paying.
  *
- * Reads the order through OrderRepository (the database when Supabase is
- * connected). Until a payment gateway is connected, orders are shown honestly
- * as "Awaiting payment".
- * Next: the customer lands here after the payment gateway redirects back; by
- * then the server has verified the payment and set paymentStatus to 'paid'.
+ * Paystack returns to /order/<id>?reference=…; this page then asks the server
+ * to verify the payment with Paystack. The page never decides an order is paid:
+ * it only shows what the server reports. If the order isn't paid yet (e.g. the
+ * customer closed the payment page), it offers "Pay now".
  */
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { EmptyState, Loading } from '../components/EmptyState'
-import { CheckIcon, InfoIcon } from '../components/Icons'
+import { CheckIcon, InfoIcon, LockIcon } from '../components/Icons'
 import { ProductImage } from '../components/ProductImage'
 import { SummaryTotals } from '../components/SummaryTotals'
-import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS } from '../models/order'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
+import { ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS, type Order } from '../models/order'
 import { orderRepository } from '../services/order/orderRepository'
+import { paymentProvider, startPayment, verifyPayment } from '../services/payment/paymentService'
 import { formatDate, formatPrice } from '../utils/format'
-import { useAsync } from '../utils/useAsync'
 import { useDocumentTitle } from '../utils/useDocumentTitle'
+
+type Phase = 'loading' | 'verifying' | 'ready' | 'missing'
 
 export function OrderConfirmationPage() {
   const { orderId = '' } = useParams()
   const location = useLocation()
-  const notice = (location.state as { notice?: string } | null)?.notice
+  const [params, setParams] = useSearchParams()
+  const returnedReference = params.get('reference') || params.get('trxref')
   const { owner, ready } = useAuth()
-  const { data: order, loading } = useAsync(
-    async () => (ready ? orderRepository.getById(orderId, owner) : null),
-    [orderId, ready, owner.kind, owner.id],
-  )
+  const { removeItem, loading: cartLoading } = useCart()
+
+  const [order, setOrder] = useState<Order | null>(null)
+  const [phase, setPhase] = useState<Phase>('loading')
+  const [notice, setNotice] = useState<string | undefined>((location.state as { notice?: string } | null)?.notice)
+  const [paying, setPaying] = useState(false)
+  const clearedFor = useRef<string | null>(null)
   useDocumentTitle(order ? `Order ${order.id}` : 'Order')
 
-  if (loading || !ready) return <div className="container page"><Loading label="Loading your order…" /></div>
+  // Load the order; if we've just come back from Paystack, verify the payment.
+  useEffect(() => {
+    if (!ready) return
+    let active = true
+    ;(async () => {
+      setPhase('loading')
+      const found = await orderRepository.getById(orderId, owner).catch(() => null)
+      if (!active) return
+      if (!found) return setPhase('missing')
+      setOrder(found)
+      if (returnedReference && found.paymentStatus === 'pending' && paymentProvider.isConfigured) {
+        setPhase('verifying')
+        const result = await verifyPayment(found, returnedReference)
+        if (!active) return
+        if (result.paid) {
+          setOrder(result.order)
+          setNotice(undefined)
+        } else {
+          setNotice(result.message)
+        }
+        // Tidy the address bar so a refresh doesn't re-check the same payment.
+        setParams({}, { replace: true })
+      }
+      setPhase('ready')
+    })()
+    return () => {
+      active = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId, ready, owner.kind, owner.id])
+
+  // Once paid, take the bought items out of the cart (the server already did
+  // this for signed-in customers; this covers guests and the open page).
+  useEffect(() => {
+    if (cartLoading || order?.paymentStatus !== 'paid' || clearedFor.current === order.id) return
+    clearedFor.current = order.id
+    for (const item of order.items) removeItem(item.productId)
+  }, [order, cartLoading, removeItem])
+
+  const onPayNow = async () => {
+    if (!order) return
+    setPaying(true)
+    setNotice(undefined)
+    const result = await startPayment(order)
+    if (result.kind === 'redirect') {
+      window.location.assign(result.url)
+      return
+    }
+    if (result.kind === 'already_paid') {
+      const fresh = await orderRepository.getById(order.id, owner).catch(() => null)
+      if (fresh) setOrder(fresh)
+    } else {
+      setNotice(result.message)
+    }
+    setPaying(false)
+  }
+
+  if (phase === 'loading' || !ready) return <div className="container page"><Loading label="Loading your order…" /></div>
+  if (phase === 'verifying') return <div className="container page"><Loading label="Confirming your payment with Paystack…" /></div>
 
   if (!order) {
     return (
@@ -45,6 +110,7 @@ export function OrderConfirmationPage() {
   }
 
   const paid = order.paymentStatus === 'paid'
+  const canPay = !paid && order.paymentStatus === 'pending' && paymentProvider.isConfigured
   const d = order.delivery
 
   return (
@@ -56,15 +122,24 @@ export function OrderConfirmationPage() {
         <h1 className="page-title">{paid ? `Thank you, ${order.customer.firstName}!` : 'Order received — awaiting payment'}</h1>
         <p className="page-subtitle">
           {paid
-            ? <>Your order is confirmed. A confirmation email has been sent to <strong>{order.customer.email}</strong>.</>
-            : <>Your order has been saved, but it has <strong>not been paid</strong>. No confirmation email has been sent.</>}
+            ? <>Your payment of <strong>{formatPrice(order.total)}</strong> was received and your order is being prepared.</>
+            : <>Your order has been saved, but it has <strong>not been paid</strong> yet. You haven’t been charged.</>}
         </p>
       </header>
 
-      {!paid && (
-        <div className="notice notice--info" role="note">
+      {!paid && (notice || !paymentProvider.isConfigured) && (
+        <div className="notice notice--info" role="status">
           <InfoIcon width={18} height={18} />
           <span>{notice ?? 'Online payment is not connected yet, so this order is waiting for payment. You have not been charged.'}</span>
+        </div>
+      )}
+
+      {canPay && (
+        <div className="pay-now">
+          <button type="button" className="btn btn--primary btn--lg" onClick={onPayNow} disabled={paying} aria-busy={paying}>
+            <LockIcon width={18} height={18} /> {paying ? 'Taking you to Paystack…' : `Pay ${formatPrice(order.total)} with Paystack`}
+          </button>
+          <p className="field-hint">Card, bank transfer or USSD on Paystack’s secure page.</p>
         </div>
       )}
 

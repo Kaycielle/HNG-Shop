@@ -7,8 +7,11 @@ import react from '@vitejs/plugin-react'
  *   VITE_SUPABASE_ANON_KEY or SUPABASE_PUBLISHABLE_KEY / SUPABASE_ANON_KEY
  * (the second set is what Vercel's Supabase integration creates).
  *
- * Only these two PUBLIC values are copied into the website. Other variables —
- * including secret ones like SUPABASE_SERVICE_ROLE_KEY — are never exposed.
+ *   VITE_PAYSTACK_PUBLIC_KEY or PAYSTACK_PUBLIC_KEY (pk_test_… / pk_live_…)
+ *
+ * Only these PUBLIC values are copied into the website. Other variables —
+ * including secret ones like SUPABASE_SERVICE_ROLE_KEY or a Paystack sk_ key —
+ * are never exposed.
  */
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '') // '.' = the project folder; '' = read every name (we pick only two below)
@@ -17,13 +20,22 @@ export default defineConfig(({ mode }) => {
     env.VITE_SUPABASE_ANON_KEY || env.VITE_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY || ''
   ).trim()
 
+  const paystackKey = (env.VITE_PAYSTACK_PUBLIC_KEY || env.PAYSTACK_PUBLIC_KEY || '').trim()
+
   assertPublicKey(supabaseKey)
+  if (paystackKey.startsWith('sk_')) {
+    throw new Error(
+      'PAYSTACK_PUBLIC_KEY contains a Paystack SECRET key (sk_…). Never put it in the website. ' +
+        'Use the public key (pk_test_… / pk_live_…); the secret key belongs only in Supabase Edge Function secrets.',
+    )
+  }
 
   return {
     plugins: [react()],
     define: {
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseKey),
+      'import.meta.env.VITE_PAYSTACK_PUBLIC_KEY': JSON.stringify(paystackKey),
       'import.meta.env.VITE_SUPPORT_EMAIL': JSON.stringify((env.VITE_SUPPORT_EMAIL || env.SUPPORT_EMAIL || '').trim()),
       // Short commit code on Vercel (e.g. c14412d), shown in the footer to check which version is live.
       'import.meta.env.VITE_BUILD_ID': JSON.stringify((env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7)),

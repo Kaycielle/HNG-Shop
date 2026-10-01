@@ -137,15 +137,22 @@ export function CheckoutPage() {
       })
       switch (payment.kind) {
         case 'redirect':
-          // Phase 2: hand over to the payment gateway's secure page.
+          // Hand over to Paystack's secure payment page. It sends the customer
+          // back to /order/<id>, where the payment is verified.
           window.location.assign(payment.url)
+          return
+        case 'already_paid':
+          navigate(`/order/${encodeURIComponent(order.id)}`)
           return
         case 'not_configured':
           navigate(`/order/${encodeURIComponent(order.id)}`, { state: { notice: payment.message } })
           return
         case 'error':
-          setSubmitError(payment.message)
-          setSubmitting(false)
+          // The order is saved; let the customer retry from the order page
+          // instead of placing a second order.
+          navigate(`/order/${encodeURIComponent(order.id)}`, {
+            state: { notice: `Your order is saved, but we couldn’t open the payment page: ${payment.message} You can pay from this page.` },
+          })
           return
       }
     } catch (err) {
@@ -255,8 +262,9 @@ export function CheckoutPage() {
                 <strong>{paymentProvider.displayName}</strong>
               </div>
               <p className="payment-box__text">
-                You’ll pay with card, bank transfer or USSD on our payment partner’s secure page. We never see or store
-                your card details.
+                {paymentProvider.isConfigured
+                  ? <>You’ll be taken to Paystack’s secure page to pay by card, bank transfer or USSD. We never see or store your card details.</>
+                  : <>You’ll pay with card, bank transfer or USSD on our payment partner’s secure page. We never see or store your card details.</>}
               </p>
               {!paymentProvider.isConfigured && (
                 <div className="notice notice--info" role="note">
@@ -275,7 +283,7 @@ export function CheckoutPage() {
           <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={submitting} aria-busy={submitting}>
             <LockIcon width={18} height={18} />
             {submitting
-              ? 'Placing your order…'
+              ? paymentProvider.isConfigured ? 'Taking you to Paystack…' : 'Placing your order…'
               : paymentProvider.isConfigured
                 ? `Pay ${formatPrice(totals.total)}`
                 : `Place order · ${formatPrice(totals.total)}`}

@@ -1081,3 +1081,6 @@ select.input { padding-right: 36px; }
 .legal p, .legal li { color: var(--text-muted); }
 .legal ul { padding-left: 20px; display: grid; gap: 8px; }
 .legal strong { color: var(--white); }
+
+/* "Pay now" on an unpaid order */
+.pay-now { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 8px 0 4px; text-align: center; }

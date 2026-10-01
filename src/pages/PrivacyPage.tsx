@@ -57,7 +57,9 @@ export function PrivacyPage() {
         <section>
           <h2>Payments</h2>
           <p>
-            Payments are handled by our payment partner on their own secure page. We never see or store your card details.
+            Payments are handled by Paystack on their own secure page. Paystack receives your email address and the order
+            amount so it can process the payment; we never see or store your card or bank details. Paystack’s own privacy
+            policy covers the information you give them.
           </p>
         </section>
 

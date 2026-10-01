@@ -25,7 +25,7 @@ src/
     order/           OrderRepository (database place_order() function, or browser)
     checkout/        Runs the checkout steps in order
     auth/            AuthService: Supabase Auth (email + Google), or demo accounts
-    payment/         PaymentService (not connected yet — orders stay "Awaiting payment")
+    payment/         PaymentService: Paystack (via the Edge Function), or not connected
     email/           Email content builder (Mailgun, sent from a server, next step)
   context/         AuthContext (who is shopping) and CartContext (their cart)
   components/      Reusable UI
@@ -33,6 +33,8 @@ src/
   styles/          global.css (design tokens at the top)
 supabase/
   migrations/      0001_confam_schema.sql — tables, security rules, order functions
+                   0002_payments.sql — mark-paid + stock functions (server only)
+  functions/       paystack/index.ts — Edge Function: start, verify and webhook for Paystack
   seed.sql         The catalogue (35 products, 7 brands)
   tests/           Security tests for a local PostgreSQL
 public/images/     Product illustrations
@@ -46,7 +48,7 @@ public/images/     Product illustrations
 | Accounts | Supabase Auth: email/password + Google          | Demo accounts, this browser only      |
 | Cart     | `cart_items` for signed-in customers; guests in the browser until they sign in | Browser |
 | Orders   | `place_order()` — prices set by the database    | Browser                               |
-| Payment  | Not connected yet — orders stay *Awaiting payment*; nothing is charged |       |
+| Payment  | Paystack via the `paystack` Edge Function (when `PAYSTACK_PUBLIC_KEY` is set) | Not connected — orders stay *Awaiting payment* |
 | Email    | Not connected yet (Mailgun, from a server, after payment is verified) |        |
 
 ## Brands and accounts
@@ -101,6 +103,40 @@ New orders are always *pending*; only a trusted server (the payment step) can ma
 
 To edit products later: Dashboard → **Table Editor → products** (change prices, stock, or set
 `active` to false to hide one). The site picks up changes on the next page load.
+
+## Payments (Paystack)
+
+How it works: checkout saves the order (*Awaiting payment*) → the `paystack` Edge Function creates a
+Paystack transaction with the **secret key** and sends the customer to Paystack's page → Paystack
+returns them to `/order/<id>` → the function verifies the payment with Paystack (status, ₦ amount,
+reference) and only then marks the order **Paid**, moves it to *Processing*, reduces stock and clears
+the bought items from the cart. Paystack's signed webhook does the same in case the customer never
+returns. The website can never mark an order paid.
+
+Setup (test mode first):
+
+1. **Database:** Supabase → SQL Editor → run `supabase/migrations/0002_payments.sql`.
+2. **Edge Function:** Supabase → **Edge Functions** → *Deploy a new function* → *Via Editor*.
+   Name it exactly `paystack`, replace the sample code with `supabase/functions/paystack/index.ts`,
+   and deploy. In the function's **Settings/Details**, turn **off** *Verify JWT* (Paystack's webhook
+   has no Supabase login; the code checks callers itself).
+3. **Secrets:** Supabase → **Edge Functions → Secrets** → add
+   `PAYSTACK_SECRET_KEY` = your `sk_test_…` key, and `SITE_URL` = your permanent shop address
+   (e.g. `https://hng-shop-kaylechi.vercel.app`).
+4. **Website:** Vercel → Settings → Environment Variables → add `PAYSTACK_PUBLIC_KEY` = your
+   `pk_test_…` key (Production) → redeploy. The checkout button changes to **Pay ₦…**.
+5. **Webhook:** Paystack → Developers → Webhooks (Test) → URL
+   `https://<your-project>.supabase.co/functions/v1/paystack/webhook`.
+
+Test card (test mode): `4084 0840 8408 4081`, any future expiry, CVV `408`, PIN `0000`, OTP `123456`.
+Going live later: swap in the `sk_live_…` / `pk_live_…` keys and set the live webhook URL.
+
+## Tests
+
+- `supabase/tests/security-tests.sql` — database security rules (45 checks)
+- `supabase/tests/paystack-function.test.mjs` — payment Edge Function (31 checks, fake Paystack)
+
+Both run against a throwaway local PostgreSQL; see the comments at the top of each file.
 
 ## Security notes
 
