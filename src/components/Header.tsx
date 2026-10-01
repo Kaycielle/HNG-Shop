@@ -6,10 +6,10 @@ import { CartIcon, CloseIcon, MenuIcon, SearchIcon } from './Icons'
 
 const NAV_LINKS = [
   { to: '/shop', label: 'Shop all' },
-  { to: '/shop?category=electronics', label: 'Electronics' },
-  { to: '/shop?category=fashion', label: 'Fashion' },
+  { to: '/shop?category=phones', label: 'Phones' },
+  { to: '/shop?category=gadgets', label: 'Gadgets' },
   { to: '/shop?category=accessories', label: 'Accessories' },
-  { to: '/shop?category=home', label: 'Home & Living' },
+  { to: '/shop?sale=1', label: 'Deals' },
 ]
 
 export function Header() {
@@ -33,11 +33,11 @@ export function Header() {
     navigate(q ? `/shop?q=${encodeURIComponent(q)}` : '/shop')
   }
 
-  const currentCategory = location.pathname === '/shop' ? params.get('category') : null
+  // A nav link is "current" when its category and sale filter match the page's.
   const isActive = (to: string) => {
     if (location.pathname !== '/shop') return false
-    const linkCategory = new URLSearchParams(to.split('?')[1] ?? '').get('category')
-    return linkCategory === currentCategory
+    const linkParams = new URLSearchParams(to.split('?')[1] ?? '')
+    return ['category', 'sale'].every((key) => linkParams.get(key) === params.get(key))
   }
 
   return (
@@ -55,7 +55,7 @@ export function Header() {
         </button>
 
         <Link to="/" className="logo" aria-label={`${config.storeName} home`}>
-          <span className="logo__mark" aria-hidden="true">K</span>
+          <span className="logo__mark" aria-hidden="true">C</span>
           <span className="logo__text">{config.storeName}</span>
         </Link>
 

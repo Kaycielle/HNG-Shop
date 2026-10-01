@@ -4,7 +4,7 @@
  * customer's browser, so anything in it can be seen by anyone.
  */
 export const config = {
-  storeName: import.meta.env.VITE_STORE_NAME || 'Kay Store',
+  storeName: import.meta.env.VITE_STORE_NAME || 'Confam NG',
   currency: import.meta.env.VITE_CURRENCY || 'NGN',
   locale: 'en-NG',
   /** Flat delivery fee, waived when the subtotal reaches the threshold. */

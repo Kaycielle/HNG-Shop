@@ -8,19 +8,19 @@ export function Footer() {
       <div className="container site-footer__grid">
         <div>
           <Link to="/" className="logo logo--light">
-            <span className="logo__mark" aria-hidden="true">K</span>
+            <span className="logo__mark" aria-hidden="true">C</span>
             <span className="logo__text">{config.storeName}</span>
           </Link>
-          <p className="site-footer__tagline">Thoughtfully chosen everyday essentials, delivered to your door.</p>
+          <p className="site-footer__tagline">Original phones, gadgets and accessories, delivered across Nigeria.</p>
         </div>
         <nav aria-label="Shop">
           <h2 className="site-footer__heading">Shop</h2>
           <ul>
             <li><Link to="/shop">All products</Link></li>
-            <li><Link to="/shop?category=electronics">Electronics</Link></li>
-            <li><Link to="/shop?category=fashion">Fashion</Link></li>
+            <li><Link to="/shop?category=phones">Phones</Link></li>
+            <li><Link to="/shop?category=gadgets">Gadgets</Link></li>
             <li><Link to="/shop?category=accessories">Accessories</Link></li>
-            <li><Link to="/shop?category=home">Home &amp; Living</Link></li>
+            <li><Link to="/shop?sale=1">Deals</Link></li>
           </ul>
         </nav>
         <nav aria-label="Your account">

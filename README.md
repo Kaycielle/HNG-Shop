@@ -1,6 +1,6 @@
-# Kay Store — HNG E-Commerce (Phase 1)
+# Confam NG — HNG E-Commerce (Phase 1)
 
-A responsive online shop built with **React + TypeScript + Vite**. Phase 1 covers the full
+Confam NG sells original phones, gadgets and accessories. This is a responsive online shop built with **React + TypeScript + Vite**. Phase 1 covers the full
 shopping and checkout experience. Database, Google sign-in, payments and email are prepared
 for, but **not connected yet**.
 
@@ -17,7 +17,7 @@ npm run build    # type-check + production build
 ```
 src/
   models/          Data shapes: Product, Cart, Order, User (match future DB tables)
-  data/            mockProducts.ts — TEMPORARY sample catalogue (deleted in Phase 2)
+  data/            mockProducts.ts — TEMPORARY sample catalogue (fictional brands) (deleted in Phase 2)
   services/        One folder per integration — the only code that changes in Phase 2
     product/         ProductService   (mock data → database)
     cart/            CartService rules + CartRepository (browser storage → database)

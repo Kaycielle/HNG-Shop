@@ -10,7 +10,7 @@
  * Every read/write is wrapped in try/catch because storage can be unavailable
  * (private browsing, blocked cookies, full storage).
  */
-const PREFIX = 'kay-shop.dev.'
+const PREFIX = 'confam-ng.dev.'
 
 export const devStorage = {
   get<T>(key: string): T | null {

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Kay Store — global styles
+   Confam NG — global styles
    Plain CSS, mobile-first. Design tokens (colours, spacing, etc.) live in
    :root so the whole look can be adjusted in one place.
    ========================================================================== */
@@ -316,8 +316,8 @@ main:focus { outline: none; }
 .section__head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .section__title { font-size: clamp(1.3rem, 3vw, 1.65rem); font-weight: 750; }
 
-.category-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); }
-@media (min-width: 900px) { .category-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
+.category-grid { list-style: none; display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 900px) { .category-grid { gap: 20px; } }
 .category-card {
   display: flex; flex-direction: column; height: 100%;
   background: var(--color-surface);
@@ -332,6 +332,11 @@ main:focus { outline: none; }
 .category-card__body { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px 16px; }
 .category-card__name { font-weight: 700; }
 .category-card__desc { font-size: 0.85rem; color: var(--color-text-muted); }
+@media (max-width: 599px) {
+  .category-card__body { padding: 10px 10px 12px; }
+  .category-card__name { font-size: 0.9rem; }
+  .category-card__desc { display: none; }
+}
 
 .promo {
   display: flex; flex-direction: column; gap: 20px; align-items: flex-start;

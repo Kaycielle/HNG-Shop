@@ -10,10 +10,9 @@ import { useAsync } from '../utils/useAsync'
 import { useDocumentTitle } from '../utils/useDocumentTitle'
 
 const CATEGORY_IMAGES: Record<string, string> = {
-  electronics: assetUrl('images/products/aura-headphones.svg'),
-  fashion: assetUrl('images/products/urban-sneakers.svg'),
-  accessories: assetUrl('images/products/leather-backpack.svg'),
-  home: assetUrl('images/products/nordic-desk-lamp.svg'),
+  phones: assetUrl('images/products/nova-x5-pro.svg'),
+  gadgets: assetUrl('images/products/airbeat-earbuds.svg'),
+  accessories: assetUrl('images/products/gan-charger.svg'),
 }
 
 export function HomePage() {
@@ -27,11 +26,11 @@ export function HomePage() {
       <section className="hero">
         <div className="container hero__inner">
           <div className="hero__content">
-            <p className="eyebrow">New season essentials</p>
-            <h1 className="hero__title">Everyday things, made better.</h1>
+            <p className="eyebrow">100% original · Confam</p>
+            <h1 className="hero__title">Phones and gadgets you can trust.</h1>
             <p className="hero__text">
-              Shop headphones, watches, bags, clothing and home pieces we love — at fair prices, with free delivery on
-              orders over {formatPrice(config.freeShippingThreshold)}.
+              Brand-new, sealed smartphones, earbuds, smartwatches, chargers and more — with warranty, fair prices and
+              free delivery on orders over {formatPrice(config.freeShippingThreshold)}.
             </p>
             <div className="hero__actions">
               <Link to="/shop" className="btn btn--primary btn--lg">Shop all products</Link>
@@ -39,16 +38,16 @@ export function HomePage() {
             </div>
           </div>
           <div className="hero__visual" aria-hidden="true">
-            <img src={assetUrl('images/products/aura-headphones.svg')} alt="" className="hero__img hero__img--main" />
-            <img src={assetUrl('images/products/analog-watch.svg')} alt="" className="hero__img hero__img--side" />
+            <img src={assetUrl('images/products/nova-x5-pro.svg')} alt="" className="hero__img hero__img--main" />
+            <img src={assetUrl('images/products/airbeat-earbuds.svg')} alt="" className="hero__img hero__img--side" />
           </div>
         </div>
       </section>
 
       <section className="usp" aria-label="Why shop with us">
         <ul className="container usp__list">
+          <li className="usp__item"><ShieldIcon /><div><strong>Original &amp; sealed</strong><span>Every device comes with warranty</span></div></li>
           <li className="usp__item"><TruckIcon /><div><strong>Fast delivery</strong><span>Nationwide, 2–5 working days</span></div></li>
-          <li className="usp__item"><ShieldIcon /><div><strong>Secure checkout</strong><span>Your details stay protected</span></div></li>
           <li className="usp__item"><ReturnIcon /><div><strong>Easy returns</strong><span>14 days to change your mind</span></div></li>
         </ul>
       </section>
@@ -88,8 +87,8 @@ export function HomePage() {
       <section className="section container">
         <div className="promo">
           <div>
-            <h2 className="promo__title">Up to 20% off selected favourites</h2>
-            <p className="promo__text">Sneakers, headphones, bags and more — while stocks last.</p>
+            <h2 className="promo__title">Up to 15% off phones, audio and chargers</h2>
+            <p className="promo__text">Nova X5 Pro, AirBeat Pro earbuds, Aura headphones and more — while stocks last.</p>
           </div>
           <Link to="/shop?sale=1" className="btn btn--light btn--lg">See the deals</Link>
         </div>
@@ -100,7 +99,7 @@ export function HomePage() {
           <h2 id="top-rated-heading" className="section__title">Customer favourites</h2>
           <Link to="/shop?sort=rating" className="link-arrow">See top rated</Link>
         </div>
-        {latest.loading ? <Loading /> : <ProductGrid products={(latest.data ?? []).slice(0, 8)} categories={categories.data ?? []} />}
+        {latest.loading ? <Loading /> : <ProductGrid products={(latest.data ?? []).filter((p) => !featured.data?.some((f) => f.id === p.id)).slice(0, 8)} categories={categories.data ?? []} />}
       </section>
     </>
   )

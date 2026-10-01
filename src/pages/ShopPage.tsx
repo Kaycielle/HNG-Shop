@@ -9,7 +9,7 @@ import { useDocumentTitle } from '../utils/useDocumentTitle'
 
 /**
  * Product catalogue. Search, category, sort and "in stock only" are stored in
- * the URL (e.g. /shop?category=fashion&sort=price-asc), so results can be
+ * the URL (e.g. /shop?category=phones&sort=price-asc), so results can be
  * bookmarked, shared, and survive a page refresh.
  */
 export function ShopPage() {
