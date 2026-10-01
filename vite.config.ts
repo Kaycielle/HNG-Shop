@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseKey),
+      'import.meta.env.VITE_SUPPORT_EMAIL': JSON.stringify((env.VITE_SUPPORT_EMAIL || env.SUPPORT_EMAIL || '').trim()),
       // Short commit code on Vercel (e.g. c14412d), shown in the footer to check which version is live.
       'import.meta.env.VITE_BUILD_ID': JSON.stringify((env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7)),
     },

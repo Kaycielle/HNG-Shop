@@ -10,6 +10,7 @@ import { CheckoutPage } from './pages/CheckoutPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage'
+import { PrivacyPage } from './pages/PrivacyPage'
 import { ProductPage } from './pages/ProductPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SignInPage } from './pages/SignInPage'
@@ -30,6 +31,7 @@ export default function App() {
               <Route path="cart" element={<CartPage />} />
               <Route path="checkout" element={<CheckoutPage />} />
               <Route path="order/:orderId" element={<OrderConfirmationPage />} />
+              <Route path="privacy" element={<PrivacyPage />} />
               <Route path="account" element={<AccountPage />} />
               <Route path="account/sign-in" element={<SignInPage />} />
               <Route path="account/register" element={<RegisterPage />} />

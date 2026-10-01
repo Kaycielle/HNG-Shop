@@ -7,6 +7,8 @@ export const config = {
   storeName: import.meta.env.VITE_STORE_NAME || 'Confam NG',
   currency: import.meta.env.VITE_CURRENCY || 'NGN',
   locale: 'en-NG',
+  /** Public contact email shown on the privacy page (set VITE_SUPPORT_EMAIL). */
+  supportEmail: import.meta.env.VITE_SUPPORT_EMAIL?.trim() || '',
   /** Flat delivery fee, waived when the subtotal reaches the threshold. */
   shippingFlatRate: 3500,
   freeShippingThreshold: 100000,

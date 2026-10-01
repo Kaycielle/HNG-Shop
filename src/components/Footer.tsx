@@ -31,6 +31,7 @@ export function Footer() {
           <ul>
             <li><Link to="/cart">Shopping cart</Link></li>
             <li><Link to="/checkout">Checkout</Link></li>
+            <li><Link to="/privacy">Privacy policy</Link></li>
           </ul>
         </nav>
         <div>

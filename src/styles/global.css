@@ -1071,3 +1071,13 @@ select.input { padding-right: 36px; }
 .auth-card__setup { display: block; margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); }
 .site-footer__bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; }
 .site-footer__build { color: rgba(255, 255, 255, 0.35); font-size: 0.75rem; }
+
+/* Long-form pages (privacy policy) */
+.legal { display: flex; flex-direction: column; gap: 28px; max-width: 70ch; }
+.legal .eyebrow { margin-bottom: -16px; }
+.legal__lead { font-size: 1.08rem; color: var(--text); }
+.legal section { display: flex; flex-direction: column; gap: 10px; }
+.legal h2 { font-size: 1.25rem; font-weight: 700; }
+.legal p, .legal li { color: var(--text-muted); }
+.legal ul { padding-left: 20px; display: grid; gap: 8px; }
+.legal strong { color: var(--white); }
