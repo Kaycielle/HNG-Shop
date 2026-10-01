@@ -11,12 +11,6 @@ import { formatPrice } from '../utils/format'
 import { useAsync } from '../utils/useAsync'
 import { useDocumentTitle } from '../utils/useDocumentTitle'
 
-const CATEGORY_IMAGES: Record<string, string> = {
-  phones: assetUrl('images/products/nova-x5-pro.svg'),
-  gadgets: assetUrl('images/products/airbeat-earbuds.svg'),
-  accessories: assetUrl('images/products/gan-charger.svg'),
-}
-
 export function HomePage() {
   useDocumentTitle()
   const categories = useAsync(getCategories, [])
@@ -24,6 +18,9 @@ export function HomePage() {
   const featured = useAsync(() => getFeaturedProducts(4), [])
   const latest = useAsync(() => getProducts({ sort: 'rating', inStockOnly: true }), [])
   const spotlight = featured.data?.[0]
+  // Each department tile shows a top-rated, in-stock product from that department.
+  const categoryImage = (categoryId: string) =>
+    latest.data?.find((p) => p.categoryId === categoryId)?.image ?? assetUrl('favicon.svg')
 
   return (
     <>
@@ -77,7 +74,7 @@ export function HomePage() {
             {categories.data?.map((c) => (
               <li key={c.id}>
                 <Link to={`/shop?category=${c.id}`} className="category-card">
-                  <img src={CATEGORY_IMAGES[c.id] ?? assetUrl('favicon.svg')} alt="" className="category-card__img" loading="lazy" />
+                  <img src={categoryImage(c.id)} alt="" className="category-card__img" loading="lazy" />
                   <span className="category-card__body">
                     <span className="category-card__name">{c.name}</span>
                     <span className="category-card__desc">{c.description}</span>
