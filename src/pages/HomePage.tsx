@@ -27,11 +27,11 @@ export function HomePage() {
       <section className="hero">
         <div className="container hero__inner">
           <div className="hero__content">
-            <p className="eyebrow">100% original · Confam</p>
-            <h1 className="hero__title">Phones and gadgets you can <span className="hero__accent">trust.</span></h1>
+            <p className="eyebrow">Luxury activewear · Lagos</p>
+            <h1 className="hero__title">Train like an <span className="hero__accent">heiress.</span></h1>
             <p className="hero__text">
-              Brand-new, sealed smartphones, earbuds, smartwatches, chargers and more — with warranty, fair prices and
-              free delivery on orders over {formatPrice(config.freeShippingThreshold)}.
+              Luxury sportswear, training equipment and supplements from Lululemon, Alo Yoga, Nike, On, Technogym and
+              more — with free delivery on orders over {formatPrice(config.freeShippingThreshold)}.
             </p>
             <div className="hero__actions">
               <Link to="/shop" className="btn btn--primary btn--lg">Shop all products</Link>
@@ -56,7 +56,7 @@ export function HomePage() {
 
       <section className="usp" aria-label="Why shop with us">
         <ul className="container usp__list">
-          <li className="usp__item"><ShieldIcon /><div><strong>Original &amp; sealed</strong><span>Every device comes with warranty</span></div></li>
+          <li className="usp__item"><ShieldIcon /><div><strong>Authentic brands</strong><span>Sourced from trusted suppliers</span></div></li>
           <li className="usp__item"><TruckIcon /><div><strong>Fast delivery</strong><span>Nationwide, 2–5 working days</span></div></li>
           <li className="usp__item"><ReturnIcon /><div><strong>Easy returns</strong><span>14 days to change your mind</span></div></li>
         </ul>
@@ -105,8 +105,8 @@ export function HomePage() {
       <section className="section container">
         <div className="promo">
           <div>
-            <h2 className="promo__title">Up to 15% off phones, audio and chargers</h2>
-            <p className="promo__text">Nova X5 Pro, AirBeat Pro earbuds, Aura headphones and more — while stocks last.</p>
+            <h2 className="promo__title">Up to 15% off selected activewear and recovery</h2>
+            <p className="promo__text">Alo Airlift, the Heiress Sculpt Set, Theragun Mini and more — while stocks last.</p>
           </div>
           <Link to="/shop?sale=1" className="btn btn--light btn--lg">See the deals</Link>
         </div>

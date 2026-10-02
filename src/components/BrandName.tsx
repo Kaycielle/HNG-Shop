@@ -1,12 +1,30 @@
 import { config } from '../config'
 
 /**
- * The store name as a wordmark. A trailing country code ("Confam NG") is
- * shown as a small red tag; screen readers still hear the plain name.
+ * Splits the store name into a wordmark and a short country tag, e.g.
+ * "Fit Heiress NG" → "Fit Heiress" + "NG". The tag is the last word when it's
+ * 2–3 capital letters; otherwise the whole name is the wordmark.
  */
+function splitName(name: string): { word: string; tag: string } {
+  const parts = name.trim().split(/\s+/)
+  const last = parts[parts.length - 1]
+  return parts.length > 1 && /^[A-Z]{2,3}$/.test(last)
+    ? { word: parts.slice(0, -1).join(' '), tag: last }
+    : { word: name.trim(), tag: '' }
+}
+
+/** Initials for the small square logo, e.g. "FH". */
+export function logoInitials(): string {
+  return splitName(config.storeName)
+    .word.split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('')
+}
+
+/** The store name as a wordmark; screen readers hear the plain name. */
 export function BrandName() {
-  const [word, ...rest] = config.storeName.split(' ')
-  const tag = rest.join(' ')
+  const { word, tag } = splitName(config.storeName)
   return (
     <span className="logo__text" aria-label={config.storeName}>
       <span aria-hidden="true">{word}</span>

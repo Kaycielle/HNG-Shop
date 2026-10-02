@@ -1,5 +1,5 @@
 -- =============================================================================
--- Confam NG — order confirmation emails (Mailgun)
+-- Fit Heiress NG — order confirmation emails (Mailgun)
 --
 -- Run AFTER 0002_payments.sql: Dashboard → SQL Editor → New query → paste → Run.
 -- Safe to run again.

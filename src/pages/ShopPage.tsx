@@ -17,7 +17,7 @@ import { useDocumentTitle } from '../utils/useDocumentTitle'
 
 /**
  * Product catalogue. Search, department, brand, item type, sort and the
- * checkboxes are stored in the URL (e.g. /shop?brand=samsung&type=audio), so
+ * checkboxes are stored in the URL (e.g. /shop?brand=nike&type=footwear), so
  * results can be bookmarked, shared, and survive a page refresh.
  *
  * With no filters at all ("Shop all"), the page opens with the brand showcase.

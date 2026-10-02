@@ -48,14 +48,14 @@ export const isSupabaseConnected = supabase !== null
 export const buildId: string = import.meta.env.VITE_BUILD_ID || 'local'
 
 console.info(
-  `[Confam NG] build ${buildId} · Supabase: ${setup.connected ? 'connected' : `not connected (${setup.problems.join('; ')})`}`,
+  `[${import.meta.env.VITE_STORE_NAME || 'Fit Heiress NG'}] build ${buildId} · Supabase: ${setup.connected ? 'connected' : `not connected (${setup.problems.join('; ')})`}`,
 )
 
 /** Supabase's error codes for a missing table/function — usually "the SQL setup hasn't been run yet". */
 export function describeSupabaseError(error: { message?: string; code?: string } | null): string {
   if (!error) return 'Unknown error'
   if (error.code === '42P01' || error.code === 'PGRST205' || error.code === 'PGRST202') {
-    return 'The database tables are missing. Run supabase/migrations/0001_confam_schema.sql and supabase/seed.sql in the Supabase SQL Editor.'
+    return 'The database tables are missing. Run supabase/migrations/0001_schema.sql and supabase/seed.sql in the Supabase SQL Editor.'
   }
   return error.message ?? 'Unknown error'
 }

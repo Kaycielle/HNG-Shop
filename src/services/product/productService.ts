@@ -54,7 +54,7 @@ export async function getBrand(brandId: string): Promise<Brand | null> {
 
 /**
  * Every brand with what it currently sells: how many products, which item
- * types (Phones, Power banks…), its lowest price and a showcase image.
+ * types (Leggings & sets, Protein…), its lowest price and a showcase image.
  */
 export async function getBrandSummaries(): Promise<BrandSummary[]> {
   const { brands, products: allProducts, types } = await getCatalog()

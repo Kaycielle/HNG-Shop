@@ -48,10 +48,10 @@ export function createPendingOrder(input: CreateOrderInput): Order {
   }
 }
 
-/** Human-friendly order number, e.g. "CN-20261001-7F3A9C". */
+/** Human-friendly order number, e.g. "FH-20261001-7F3A9C". */
 function generateOrderNumber(): string {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-  return `CN-${date}-${randomId().slice(0, 6).toUpperCase()}`
+  return `FH-${date}-${randomId().slice(0, 6).toUpperCase()}`
 }
 
 function trimAll<T extends object>(obj: T): T {

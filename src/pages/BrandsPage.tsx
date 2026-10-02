@@ -17,9 +17,9 @@ export function BrandsPage() {
         </ol>
       </nav>
       <header className="page-header">
-        <p className="eyebrow">Original &amp; sealed</p>
+        <p className="eyebrow">Luxury labels</p>
         <h1 className="page-title">Shop by brand</h1>
-        <p className="page-subtitle">Choose a brand to see everything we stock from it, from phones to power banks.</p>
+        <p className="page-subtitle">Choose a brand to see everything we stock from it, from leggings to protein.</p>
       </header>
       {brands.loading ? <Loading label="Loading brands…" /> : <BrandShowcase brands={brands.data ?? []} />}
     </div>

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Confam NG — global styles
+   Fit Heiress NG — global styles
    Plain CSS, mobile-first. Design tokens (colours, type, spacing) live in
    :root so the whole look can be adjusted in one place.
 
@@ -226,7 +226,7 @@ main:focus { outline: none; }
   width: 32px; height: 32px;
   border-radius: 9px;
   background: var(--red); color: var(--white);
-  font-family: var(--font-brand); font-size: 0.85rem;
+  font-family: var(--font-brand); font-size: 0.62rem; letter-spacing: 0.04em;
   box-shadow: 0 4px 16px rgba(223, 37, 49, 0.45);
 }
 .logo__text {
@@ -934,7 +934,6 @@ select.input { padding-right: 36px; }
 
 .brand-strip { list-style: none; display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 640px) { .brand-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-@media (min-width: 1080px) { .brand-strip { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
 .brand-strip__link {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   min-height: 86px; padding: 14px 10px;

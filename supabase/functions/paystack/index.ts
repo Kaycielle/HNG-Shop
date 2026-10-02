@@ -1,5 +1,5 @@
 /**
- * Confam NG — Paystack payments (Supabase Edge Function, runs on Supabase's servers).
+ * Fit Heiress NG — Paystack payments (Supabase Edge Function, runs on Supabase's servers).
  *
  * One function, three jobs:
  *   POST { action: "initialize", orderId, guestId? }  → starts a Paystack payment, returns its page URL
@@ -12,7 +12,7 @@
  * Optional — order confirmation emails (Mailgun):
  *   MAILGUN_API_KEY      your Mailgun API key — secret, never put this in the website
  *   MAILGUN_DOMAIN       e.g. sandboxXXXX.mailgun.org (testing) or mg.yourdomain.com
- *   MAILGUN_FROM         optional, e.g. "Confam NG <orders@mg.yourdomain.com>"
+ *   MAILGUN_FROM         optional, e.g. "Fit Heiress NG <orders@mg.yourdomain.com>"
  *   MAILGUN_REGION       optional: "eu" if your Mailgun account is in the EU region
  * Without them, payments still work; no email is sent.
  * SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase automatically.
@@ -134,7 +134,7 @@ async function finalize(tx: PaystackTransaction): Promise<OrderJson | null> {
   if (tx.status !== 'success') return null
   const orderId = orderIdFromMetadata(tx)
   if (!orderId || !tx.reference.startsWith(`${orderId}-`)) {
-    console.error('Payment does not belong to a Confam order', tx.reference)
+    console.error('Payment does not belong to one of our orders', tx.reference)
     return null
   }
   const order = await loadOrder(orderId)
@@ -162,7 +162,11 @@ const mailgun = {
   from: (Deno.env.get('MAILGUN_FROM') ?? '').trim(),
   region: (Deno.env.get('MAILGUN_REGION') ?? '').trim().toLowerCase(),
 }
-const storeName = (Deno.env.get('STORE_NAME') ?? 'Confam NG').trim()
+const storeName = (Deno.env.get('STORE_NAME') ?? 'Fit Heiress NG').trim()
+// "Fit Heiress NG" → wordmark "FIT HEIRESS" + tag "NG" (same rule as the website logo).
+const nameParts = storeName.split(/\s+/)
+const emailTag = nameParts.length > 1 && /^[A-Z]{2,3}$/.test(nameParts[nameParts.length - 1]) ? nameParts[nameParts.length - 1] : ''
+const emailWordmark = (emailTag ? nameParts.slice(0, -1).join(' ') : storeName).toUpperCase()
 const naira = (n: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n)
 /** Customer-typed text (names, addresses) must never be able to inject HTML into the email. */
 const esc = (s: unknown) =>
@@ -238,7 +242,7 @@ export function buildConfirmationEmail(order: OrderJson, site: string) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 12px;"><tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden;">
       <tr><td style="background:#09090b;padding:20px 28px;color:#fff;font-size:18px;font-weight:bold;letter-spacing:2px;">
-        CONFAM <span style="color:#ff4d57;font-size:12px;border:1px solid #df2531;border-radius:4px;padding:2px 5px;">NG</span>
+        ${esc(emailWordmark)}${emailTag ? ` <span style="color:#ff4d57;font-size:12px;border:1px solid #df2531;border-radius:4px;padding:2px 5px;">${esc(emailTag)}</span>` : ''}
       </td></tr>
       <tr><td style="padding:28px;">
         <h1 style="margin:0 0 8px;font-size:22px;">Thank you, ${esc(c.firstName)}!</h1>

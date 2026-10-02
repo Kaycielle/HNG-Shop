@@ -7,8 +7,8 @@ import { useAsync } from '../utils/useAsync'
 import { useDocumentTitle } from '../utils/useDocumentTitle'
 
 /**
- * One brand's page: every item type the brand offers (Phones, Headsets &
- * earbuds, Power banks…) with the products for each. ?type= narrows it to one.
+ * One brand's page: every item type the brand offers (Leggings & sets,
+ * Sports bras, Protein…) with the products for each. ?type= narrows it to one.
  */
 export function BrandPage() {
   const { brandId = '' } = useParams()
@@ -56,7 +56,7 @@ export function BrandPage() {
       </nav>
 
       <header className="brand-hero">
-        <p className="eyebrow">Official {brand.data.name} products</p>
+        <p className="eyebrow">Shop {brand.data.name}</p>
         <h1 className="brand-hero__name">{brand.data.name}</h1>
         <p className="page-subtitle">{brand.data.tagline} · {pluralize(all.length, 'product')}</p>
       </header>

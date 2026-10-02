@@ -1,4 +1,4 @@
--- Security tests for the Confam NG schema. Run against a THROWAWAY local database
+-- Security tests for the Fit Heiress NG schema. Run against a THROWAWAY local database
 -- (never your live Supabase project): local-supabase-stub.sql, then the migration,
 -- then seed.sql, then this file. Every line should print PASS.
 \set ON_ERROR_STOP 1
@@ -32,7 +32,7 @@ select pg_temp.check((select full_name from profiles where email='chi@example.co
 -- ===== 2. Catalogue: everyone reads, nobody writes =====
 set role anon; set request.jwt.claim.sub = '';
 select pg_temp.check((select count(*) from products) = 35, 'guest can browse all 35 products');
-select pg_temp.check((select count(*) from brands) = 7, 'guest can read brands');
+select pg_temp.check((select count(*) from brands) = 8, 'guest can read brands');
 reset role;
 -- updates by guests/customers silently affect 0 rows under RLS; check price unchanged
 set role anon; update products set price = 1 where id = 'p-001'; reset role;
@@ -40,7 +40,7 @@ set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-000
 update products set price = 1 where id = 'p-001'; delete from products where id = 'p-002';
 select pg_temp.expect_error($$insert into products (id, slug, name, price, category_id, brand_id, type_id) values ('hack','hack','Hack',1,'phones','nova','phones')$$, 'row-level security', 'customer cannot add products');
 reset role;
-select pg_temp.check((select price from products where id = 'p-001') = 2150000 and exists (select 1 from products where id='p-002'), 'guests/customers cannot change or delete products');
+select pg_temp.check((select price from products where id = 'p-001') = 145000 and exists (select 1 from products where id='p-002'), 'guests/customers cannot change or delete products');
 update products set active = false where id = 'p-035';
 set role anon; select pg_temp.check((select count(*) from products) = 34, 'hidden (inactive) products are not shown'); reset role;
 update products set active = true where id = 'p-035';
@@ -68,17 +68,17 @@ insert into r select place_order(
   '{"address":"5 Awolowo Road","city":"Lagos","state":"Lagos","country":"Nigeria"}',
   -- the "unitPrice" and "total" here are lies from a tampered browser — they must be ignored
   '[{"productId":"p-002","quantity":1,"unitPrice":1},{"productId":"p-027","quantity":2,"unitPrice":1}]');
-select pg_temp.check((select (o->>'subtotal')::int from r) = 1092500 + 9000, 'subtotal uses real prices (iPhone 15 −5% + 2 cables = ₦1,101,500)');
-select pg_temp.check((select (o->>'shipping')::int from r) = 0 and (select (o->>'total')::int from r) = 1101500, 'free delivery over ₦100,000; total correct');
+select pg_temp.check((select (o->>'subtotal')::int from r) = 74100 + 37000, 'subtotal uses real prices (Energy Bra −5% + 2 jump ropes = ₦111,100)');
+select pg_temp.check((select (o->>'shipping')::int from r) = 0 and (select (o->>'total')::int from r) = 111100, 'free delivery over ₦100,000; total correct');
 select pg_temp.check((select o->>'paymentStatus' from r) = 'pending' and (select o->>'orderStatus' from r) = 'pending', 'new order is pending / awaiting payment');
-select pg_temp.check((select o->>'id' from r) ~ '^CN-\d{8}-[0-9A-F]{6}$', 'order number looks like CN-YYYYMMDD-XXXXXX: ' || (select o->>'id' from r));
+select pg_temp.check((select o->>'id' from r) ~ '^FH-\d{8}-[0-9A-F]{6}$', 'order number looks like FH-YYYYMMDD-XXXXXX: ' || (select o->>'id' from r));
 select pg_temp.check((select jsonb_array_length(o->'items') from r) = 2 and (select o->'customer'->>'email' from r) = 'ada@example.com', 'order has 2 items; email stored lower-case');
 truncate r;
 insert into r select place_order('{"firstName":"Ada","lastName":"Okafor","email":"ada@example.com","phone":"0801"}',
   '{"address":"5 Awolowo Road","city":"Lagos","state":"Lagos","country":"Nigeria"}', '[{"productId":"p-027","quantity":1}]');
-select pg_temp.check((select (o->>'shipping')::int from r) = 3500 and (select (o->>'total')::int from r) = 8000, 'small order pays ₦3,500 delivery (₦4,500 + ₦3,500 = ₦8,000)');
+select pg_temp.check((select (o->>'shipping')::int from r) = 3500 and (select (o->>'total')::int from r) = 22000, 'small order pays ₦3,500 delivery (₦18,500 + ₦3,500 = ₦22,000)');
 select pg_temp.expect_error($$select place_order('{"firstName":"A","lastName":"B","email":"a@b.co","phone":"1"}','{"address":"x","city":"y","state":"z","country":"Nigeria"}','[{"productId":"p-004","quantity":1}]')$$, 'out of stock', 'sold-out product is refused');
-select pg_temp.expect_error($$select place_order('{"firstName":"A","lastName":"B","email":"a@b.co","phone":"1"}','{"address":"x","city":"y","state":"z","country":"Nigeria"}','[{"productId":"p-001","quantity":4}]')$$, 'fewer than 4 left', 'more than the stock is refused (iPhone 16 Pro Max has 3)');
+select pg_temp.expect_error($$select place_order('{"firstName":"A","lastName":"B","email":"a@b.co","phone":"1"}','{"address":"x","city":"y","state":"z","country":"Nigeria"}','[{"productId":"p-018","quantity":3}]')$$, 'fewer than 3 left', 'more than the stock is refused (Technogym dumbbells: 2 left)');
 select pg_temp.expect_error($$select place_order('{"firstName":"A","lastName":"B","email":"a@b.co","phone":"1"}','{"address":"x","city":"y","state":"z","country":"Nigeria"}','[{"productId":"p-027","quantity":0}]')$$, 'between 1 and 10', 'zero quantity is refused');
 select pg_temp.expect_error($$select place_order('{"firstName":"A","lastName":"B","email":"a@b.co","phone":"1"}','{"address":"x","city":"y","state":"z","country":"Nigeria"}','[{"productId":"p-027","quantity":1},{"productId":"p-027","quantity":1}]')$$, 'appear once', 'duplicate lines are refused');
 select pg_temp.expect_error($$select place_order('{"firstName":"A","lastName":"B","email":"a@b.co","phone":"1"}','{"address":"x","city":"y","state":"z","country":"Nigeria"}','[]')$$, 'cart is empty', 'empty order is refused');
@@ -90,7 +90,7 @@ select pg_temp.check((select count(*) from my_orders()) = 2, 'my_orders() return
 
 -- ===== 5. Orders are private, and customers can't mark them paid =====
 update orders set payment_status = 'paid', order_status = 'shipped';
-select pg_temp.expect_error($$insert into orders (id, user_id, first_name, last_name, email, phone, address, city, state, country, subtotal, shipping, total) values ('CN-FAKE', auth.uid(), 'a','b','c','d','e','f','g','h',0,0,0)$$, 'row-level security', 'customer cannot insert orders directly');
+select pg_temp.expect_error($$insert into orders (id, user_id, first_name, last_name, email, phone, address, city, state, country, subtotal, shipping, total) values ('FH-FAKE', auth.uid(), 'a','b','c','d','e','f','g','h',0,0,0)$$, 'row-level security', 'customer cannot insert orders directly');
 reset role;
 select pg_temp.check((select count(*) from orders where payment_status = 'paid') = 0, 'customer cannot mark their own order paid');
 set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';

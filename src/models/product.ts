@@ -8,21 +8,21 @@
 
 export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
 
-/** A department of the shop: Phones, Gadgets or Accessories. */
+/** A department of the shop: Sportswear, Equipment or Supplements. */
 export interface Category {
   id: string
   name: string
   description: string
 }
 
-/** A finer kind of item inside a department, e.g. "Power banks". */
+/** A finer kind of item inside a department, e.g. "Sports bras". */
 export interface ProductType {
   id: string
   name: string
   categoryId: string
 }
 
-/** The maker of a product, e.g. Samsung. */
+/** The maker of a product, e.g. Lululemon. */
 export interface Brand {
   id: string
   name: string
@@ -40,7 +40,7 @@ export interface BrandSummary extends Brand {
 
 export interface Product {
   id: string
-  /** URL-friendly name used in links, e.g. /product/aura-wireless-headphones */
+  /** URL-friendly name used in links, e.g. /product/lululemon-align-legging */
   slug: string
   name: string
   /** Short one-line summary shown on product cards. */

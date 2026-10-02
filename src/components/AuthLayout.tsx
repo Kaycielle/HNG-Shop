@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { config } from '../config'
 import { useAuth } from '../context/AuthContext'
 import { AuthError } from '../services/auth/authService'
 import { supabaseSetup } from '../services/supabase/client'
@@ -22,7 +23,7 @@ export function AuthLayout({ title, subtitle, children, footer }: { title: strin
   return (
     <div className="container page auth-page">
       <div className="auth-card">
-        <p className="eyebrow">Confam NG account</p>
+        <p className="eyebrow">{config.storeName} account</p>
         <h1 className="auth-card__title">{title}</h1>
         <p className="page-subtitle">{subtitle}</p>
 

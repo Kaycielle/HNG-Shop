@@ -5,7 +5,7 @@ interface Props {
   value: number
   max: number
   onChange: (value: number) => void
-  /** Accessible name, e.g. "Quantity for Aura Headphones". */
+  /** Accessible name, e.g. "Quantity of Nike Dri-FIT Training Tee". */
   label: string
   disabled?: boolean
   size?: 'sm' | 'md'

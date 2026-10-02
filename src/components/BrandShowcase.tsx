@@ -4,7 +4,7 @@ import { formatPrice, pluralize } from '../utils/format'
 
 /**
  * Grid of brand tiles. Each tile opens the brand's page; the item-type links
- * inside jump straight to that brand's phones, power banks, etc.
+ * inside jump straight to that brand's leggings, protein, etc.
  */
 export function BrandShowcase({ brands }: { brands: BrandSummary[] }) {
   return (

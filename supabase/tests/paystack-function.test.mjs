@@ -2,7 +2,7 @@
 // (never your live project) with fake Supabase auth and a fake Paystack.
 //
 // 1. Create a local database and run, in order: tests/local-supabase-stub.sql,
-//    migrations/0001_confam_schema.sql, 0002_payments.sql, 0003_confirmation_emails.sql, seed.sql
+//    migrations/0001_schema.sql, 0002_payments.sql, 0003_confirmation_emails.sql, seed.sql
 // 2. node --experimental-strip-types --no-warnings --import ./supabase/tests/node-deno-shim.mjs supabase/tests/paystack-function.test.mjs
 //    (connection via PGHOST / PGPORT / PGUSER / PGDATABASE; defaults: localhost 5432 postgres confam)
 import { execFileSync } from 'node:child_process'
@@ -105,7 +105,7 @@ const place = (sub, guest) => JSON.parse(sql(`${sub ? `set role authenticated; s
 const userOrder = place(USERS['tok-ada'])
 const guestOrder = place(null, 'g_guestbrowser01')
 const stock0 = stock('p-024')
-console.log(`   user order ${userOrder.id} total ₦${userOrder.total}; guest order ${guestOrder.id}; FreePods stock ${stock0}`)
+console.log(`   user order ${userOrder.id} total ₦${userOrder.total}; guest order ${guestOrder.id}; whey stock ${stock0}`)
 
 // 1. Starting a payment
 let r = await call({ action: 'initialize', orderId: userOrder.id }, 'tok-ada')
@@ -118,7 +118,7 @@ ok((await call({ action: 'initialize', orderId: userOrder.id }, 'tok-bayo')).sta
 ok((await call({ action: 'initialize', orderId: userOrder.id })).status === 404, 'a guest cannot start payment for Ada’s order')
 ok((await call({ action: 'initialize', orderId: guestOrder.id, guestId: 'g_guestbrowser01' })).status === 200, 'guest can pay for their own order (same browser)')
 ok((await call({ action: 'initialize', orderId: guestOrder.id, guestId: 'g_otherbrowser9' })).status === 404, 'a different browser cannot pay for/inspect the guest order')
-ok((await call({ action: 'initialize', orderId: 'CN-NOPE' }, 'tok-ada')).status === 404, 'unknown order → not found')
+ok((await call({ action: 'initialize', orderId: 'FH-NOPE' }, 'tok-ada')).status === 404, 'unknown order → not found')
 
 // 2. Customer closes the Paystack page without paying
 r = await call({ action: 'verify', orderId: userOrder.id, reference: init1.reference }, 'tok-ada')
@@ -155,9 +155,9 @@ ok(Number(sql(`select count(*) from cart_items where user_id = '${USERS['tok-ada
 // 6b. Confirmation email
 ok(mailgun.sent.length === 1, 'exactly one confirmation email sent after payment')
 const mail = mailgun.sent[0]
-ok(mail.to.includes('ada@example.com') && mail.domain === 'sandbox123.mailgun.org' && mail.from === 'Confam NG <orders@sandbox123.mailgun.org>', 'email goes to the customer, from the Mailgun domain')
-ok(mail.subject === `Your Confam NG order ${userOrder.id} is confirmed`, 'subject names the order: ' + mail.subject)
-ok(mail.text.includes('Oraimo FreePods 4 x 2') && mail.text.includes('₦61,100') && mail.text.includes('5 Awolowo Road'), 'email lists items, total paid (₦61,100) and delivery address')
+ok(mail.to.includes('ada@example.com') && mail.domain === 'sandbox123.mailgun.org' && mail.from === 'Fit Heiress NG <orders@sandbox123.mailgun.org>', 'email goes to the customer, from the Mailgun domain')
+ok(mail.subject === `Your Fit Heiress NG order ${userOrder.id} is confirmed`, 'subject names the order: ' + mail.subject)
+ok(mail.text.includes('Momentous Essential Grass-Fed Whey (24 servings) x 2') && mail.text.includes('₦196,000') && mail.text.includes('5 Awolowo Road'), 'email lists items, total paid (₦196,000) and delivery address')
 ok(mail.text.includes(`https://hng-shop-kaylechi.vercel.app/order/${userOrder.id}`), 'email links to the order page')
 ok(mail.html.includes('&lt;b&gt;Okafor&lt;/b&gt;') && !mail.html.includes('<b>Okafor</b>'), 'customer-typed text is escaped in the HTML email')
 ok(mailgun.auth[0] === 'Basic ' + Buffer.from('api:mg-test-key').toString('base64'), 'Mailgun called with the API key (server side only)')

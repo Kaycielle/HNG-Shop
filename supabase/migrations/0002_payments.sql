@@ -1,7 +1,7 @@
 -- =============================================================================
--- Confam NG — payments (Paystack)
+-- Fit Heiress NG — payments (Paystack)
 --
--- Run AFTER 0001_confam_schema.sql: Dashboard → SQL Editor → New query →
+-- Run AFTER 0001_schema.sql: Dashboard → SQL Editor → New query →
 -- paste this file → Run. Safe to run again.
 --
 -- These functions are used ONLY by the "paystack" Edge Function, which runs on

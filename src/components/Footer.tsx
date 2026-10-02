@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { config } from '../config'
 import { buildId } from '../services/supabase/client'
-import { BrandName } from './BrandName'
+import { BrandName, logoInitials } from './BrandName'
 import { formatPrice } from '../utils/format'
 
 export function Footer() {
@@ -10,19 +10,19 @@ export function Footer() {
       <div className="container site-footer__grid">
         <div>
           <Link to="/" className="logo">
-            <span className="logo__mark" aria-hidden="true">C</span>
+            <span className="logo__mark" aria-hidden="true">{logoInitials()}</span>
             <BrandName />
           </Link>
-          <p className="site-footer__tagline">Original phones, gadgets and accessories, delivered across Nigeria.</p>
+          <p className="site-footer__tagline">Luxury sportswear, training equipment and supplements, delivered across Nigeria.</p>
         </div>
         <nav aria-label="Shop">
           <h2 className="site-footer__heading">Shop</h2>
           <ul>
             <li><Link to="/shop">All products</Link></li>
             <li><Link to="/brands">Brands</Link></li>
-            <li><Link to="/shop?category=phones">Phones</Link></li>
-            <li><Link to="/shop?category=gadgets">Gadgets</Link></li>
-            <li><Link to="/shop?category=accessories">Accessories</Link></li>
+            <li><Link to="/shop?category=sportswear">Sportswear</Link></li>
+            <li><Link to="/shop?category=equipment">Equipment</Link></li>
+            <li><Link to="/shop?category=supplements">Supplements</Link></li>
             <li><Link to="/shop?sale=1">Deals</Link></li>
           </ul>
         </nav>

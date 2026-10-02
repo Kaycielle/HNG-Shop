@@ -1,6 +1,6 @@
-# Confam NG — HNG E-Commerce
+# Fit Heiress NG — HNG E-Commerce
 
-Confam NG sells original phones, gadgets and accessories. A responsive online shop built with
+Fit Heiress NG sells luxury sportswear, training equipment and supplements. A responsive online shop built with
 **React + TypeScript + Vite**, with **Supabase** for the database and customer accounts.
 
 ## Run it
@@ -31,11 +31,11 @@ src/
   pages/           Home, Shop, Brands, Brand, Product, Cart, Checkout, Order, Account, Sign in, Register
   styles/          global.css (design tokens at the top)
 supabase/
-  migrations/      0001_confam_schema.sql — tables, security rules, order functions
+  migrations/      0001_schema.sql — tables, security rules, order functions
                    0002_payments.sql — mark-paid + stock functions (server only)
                    0003_confirmation_emails.sql — one-email-per-order tracking
   functions/       paystack/index.ts — Edge Function: Paystack start/verify/webhook + Mailgun email
-  seed.sql         The catalogue (35 products, 7 brands)
+  seed.sql         The catalogue (35 products, 8 brands)
   tests/           Security tests for a local PostgreSQL
 public/images/     Product illustrations
 ```
@@ -59,14 +59,21 @@ public/images/     Product illustrations
 - **Accounts:** `/account/register`, `/account/sign-in` and `/account` (details, saved cart, orders).
   A guest's cart moves into their account when they sign in; signing out keeps it saved.
 
+## Switching an existing database to the Fit Heiress catalogue
+
+If your Supabase project was set up with the earlier phone catalogue, run once in the SQL Editor:
+`supabase/migrations/0004_fit_heiress_switch.sql` (clears TEST orders, carts and old products,
+makes order numbers start with FH-), then `supabase/seed.sql`. Customer accounts are kept.
+Don't run 0004 again after real customers have ordered — it deletes all orders.
+
 ## Connecting Supabase (database + accounts)
 
 Without Supabase the shop runs on sample data with demo accounts. To make it real:
 
 1. **Create a project** at [supabase.com](https://supabase.com) → *New project* (any name, e.g.
-   `confam-ng`; choose a strong database password and the region closest to Nigeria, e.g. *West EU*).
+   `fit-heiress-ng`; choose a strong database password and the region closest to Nigeria, e.g. *West EU*).
 2. **Create the tables.** Dashboard → **SQL Editor** → *New query* → paste the whole of
-   `supabase/migrations/0001_confam_schema.sql` → **Run**.
+   `supabase/migrations/0001_schema.sql` → **Run**.
 3. **Add the products.** New query → paste `supabase/seed.sql` → **Run**.
    (Changed `src/data/mockProducts.ts`? Run `npm run db:seed` to regenerate it.)
 4. **Connect the site.** Dashboard → **Project Settings → API** (or the *Connect* button).

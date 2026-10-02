@@ -4,7 +4,7 @@
  * customer's browser, so anything in it can be seen by anyone.
  */
 export const config = {
-  storeName: import.meta.env.VITE_STORE_NAME || 'Confam NG',
+  storeName: import.meta.env.VITE_STORE_NAME || 'Fit Heiress NG',
   currency: import.meta.env.VITE_CURRENCY || 'NGN',
   locale: 'en-NG',
   /** Public contact email shown on the privacy page (set VITE_SUPPORT_EMAIL). */

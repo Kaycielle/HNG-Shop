@@ -3,15 +3,15 @@ import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-
 import { config } from '../config'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
-import { BrandName } from './BrandName'
+import { BrandName, logoInitials } from './BrandName'
 import { CartIcon, CloseIcon, MenuIcon, SearchIcon, UserIcon } from './Icons'
 
 const NAV_LINKS = [
   { to: '/shop', label: 'Shop all' },
   { to: '/brands', label: 'Brands' },
-  { to: '/shop?category=phones', label: 'Phones' },
-  { to: '/shop?category=gadgets', label: 'Gadgets' },
-  { to: '/shop?category=accessories', label: 'Accessories' },
+  { to: '/shop?category=sportswear', label: 'Sportswear' },
+  { to: '/shop?category=equipment', label: 'Equipment' },
+  { to: '/shop?category=supplements', label: 'Supplements' },
   { to: '/shop?sale=1', label: 'Deals' },
 ]
 
@@ -60,7 +60,7 @@ export function Header() {
         </button>
 
         <Link to="/" className="logo" aria-label={`${config.storeName} home`}>
-          <span className="logo__mark" aria-hidden="true">C</span>
+          <span className="logo__mark" aria-hidden="true">{logoInitials()}</span>
           <BrandName />
         </Link>
 

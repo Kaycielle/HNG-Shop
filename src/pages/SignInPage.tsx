@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/AuthLayout'
 import { Loading } from '../components/EmptyState'
 import { TextField } from '../components/TextField'
+import { config } from '../config'
 import { useAuth } from '../context/AuthContext'
 import { AuthError } from '../services/auth/authService'
 import { validateEmail } from '../utils/authValidation'
@@ -51,7 +52,7 @@ export function SignInPage() {
     <AuthLayout
       title="Welcome back"
       subtitle="Sign in to see your orders and pick up your saved cart."
-      footer={<>New to Confam NG? <Link to="/account/register" state={{ from: returnTo }}>Create an account</Link></>}
+      footer={<>New to {config.storeName}? <Link to="/account/register" state={{ from: returnTo }}>Create an account</Link></>}
     >
       <form className="auth-form" onSubmit={onSubmit} noValidate>
         {formError && <div className="notice notice--error" role="alert">{formError}</div>}
