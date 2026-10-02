@@ -8,7 +8,7 @@
  *
  * Secrets (Dashboard → Edge Functions → Secrets):
  *   PAYSTACK_SECRET_KEY  sk_test_… (later sk_live_…) — never put this in the website
- *   SITE_URL             your shop's permanent address, e.g. https://hng-shop-kaylechi.vercel.app
+ *   SITE_URL             your shop's permanent address, e.g. https://hng-shop-gamma.vercel.app
  * Optional — order confirmation emails (Mailgun):
  *   MAILGUN_API_KEY      your Mailgun API key — secret, never put this in the website
  *   MAILGUN_DOMAIN       e.g. sandboxXXXX.mailgun.org (testing) or mg.yourdomain.com

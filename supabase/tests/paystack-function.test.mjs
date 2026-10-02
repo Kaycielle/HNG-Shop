@@ -15,7 +15,7 @@ const lit = (v) => (v === null || v === undefined ? 'null' : typeof v === 'numbe
 
 const SUPABASE_URL = 'https://proj.supabase.co'
 const SECRET = 'sk_test_unit_secret'
-const SITE = 'https://hng-shop-kaylechi.vercel.app'
+const SITE = 'https://hng-shop-gamma.vercel.app'
 const USERS = { 'tok-ada': '00000000-0000-0000-0000-0000000000a1', 'tok-bayo': '00000000-0000-0000-0000-0000000000b2' }
 let failures = 0
 const ok = (c, m) => { console.log(`${c ? 'PASS' : 'FAIL'}  ${m}`); if (!c) failures++ }
@@ -158,7 +158,7 @@ const mail = mailgun.sent[0]
 ok(mail.to.includes('ada@example.com') && mail.domain === 'sandbox123.mailgun.org' && mail.from === 'Fit Heiress NG <orders@sandbox123.mailgun.org>', 'email goes to the customer, from the Mailgun domain')
 ok(mail.subject === `Your Fit Heiress NG order ${userOrder.id} is confirmed`, 'subject names the order: ' + mail.subject)
 ok(mail.text.includes('Momentous Essential Grass-Fed Whey (24 servings) x 2') && mail.text.includes('₦196,000') && mail.text.includes('5 Awolowo Road'), 'email lists items, total paid (₦196,000) and delivery address')
-ok(mail.text.includes(`https://hng-shop-kaylechi.vercel.app/order/${userOrder.id}`), 'email links to the order page')
+ok(mail.text.includes(`https://hng-shop-gamma.vercel.app/order/${userOrder.id}`), 'email links to the order page')
 ok(mail.html.includes('&lt;b&gt;Okafor&lt;/b&gt;') && !mail.html.includes('<b>Okafor</b>'), 'customer-typed text is escaped in the HTML email')
 ok(mailgun.auth[0] === 'Basic ' + Buffer.from('api:mg-test-key').toString('base64'), 'Mailgun called with the API key (server side only)')
 ok(r.body.order.confirmationEmailSentAt && orderRow(userOrder.id).confirmation_email_sent_at !== null, 'order records when the email was sent')

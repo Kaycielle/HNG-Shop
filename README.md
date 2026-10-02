@@ -129,7 +129,7 @@ Setup (test mode first):
    has no Supabase login; the code checks callers itself).
 3. **Secrets:** Supabase → **Edge Functions → Secrets** → add
    `PAYSTACK_SECRET_KEY` = your `sk_test_…` key, and `SITE_URL` = your permanent shop address
-   (e.g. `https://hng-shop-kaylechi.vercel.app`).
+   (e.g. `https://hng-shop-gamma.vercel.app`).
 4. **Website:** Vercel → Settings → Environment Variables → add `PAYSTACK_PUBLIC_KEY` = your
    `pk_test_…` key (Production) → redeploy. The checkout button changes to **Pay ₦…**.
 5. **Webhook:** Paystack → Developers → Webhooks (Test) → URL
