@@ -63,8 +63,10 @@ export interface Order {
   currency: string
   paymentStatus: PaymentStatus
   orderStatus: OrderStatus
-  /** Reference from the payment gateway. Set in Phase 2. */
+  /** Reference from the payment gateway (Paystack). */
   paymentReference: string | null
+  /** When the confirmation email was sent (set by the server after payment). */
+  confirmationEmailSentAt?: string | null
   createdAt: string // ISO date string
 }
 

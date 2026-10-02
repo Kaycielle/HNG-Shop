@@ -26,7 +26,6 @@ src/
     checkout/        Runs the checkout steps in order
     auth/            AuthService: Supabase Auth (email + Google), or demo accounts
     payment/         PaymentService: Paystack (via the Edge Function), or not connected
-    email/           Email content builder (Mailgun, sent from a server, next step)
   context/         AuthContext (who is shopping) and CartContext (their cart)
   components/      Reusable UI
   pages/           Home, Shop, Brands, Brand, Product, Cart, Checkout, Order, Account, Sign in, Register
@@ -34,7 +33,8 @@ src/
 supabase/
   migrations/      0001_confam_schema.sql — tables, security rules, order functions
                    0002_payments.sql — mark-paid + stock functions (server only)
-  functions/       paystack/index.ts — Edge Function: start, verify and webhook for Paystack
+                   0003_confirmation_emails.sql — one-email-per-order tracking
+  functions/       paystack/index.ts — Edge Function: Paystack start/verify/webhook + Mailgun email
   seed.sql         The catalogue (35 products, 7 brands)
   tests/           Security tests for a local PostgreSQL
 public/images/     Product illustrations
@@ -49,7 +49,7 @@ public/images/     Product illustrations
 | Cart     | `cart_items` for signed-in customers; guests in the browser until they sign in | Browser |
 | Orders   | `place_order()` — prices set by the database    | Browser                               |
 | Payment  | Paystack via the `paystack` Edge Function (when `PAYSTACK_PUBLIC_KEY` is set) | Not connected — orders stay *Awaiting payment* |
-| Email    | Not connected yet (Mailgun, from a server, after payment is verified) |        |
+| Email    | Mailgun confirmation email from the `paystack` Edge Function after a verified payment (when `MAILGUN_*` secrets are set) | No email |
 
 ## Brands and accounts
 
@@ -131,10 +131,24 @@ Setup (test mode first):
 Test card (test mode): `4084 0840 8408 4081`, any future expiry, CVV `408`, PIN `0000`, OTP `123456`.
 Going live later: swap in the `sk_live_…` / `pk_live_…` keys and set the live webhook URL.
 
+## Confirmation emails (Mailgun)
+
+After a payment is verified, the `paystack` Edge Function emails the customer their order number,
+items, totals and delivery address. Each order gets exactly one email (`claim_confirmation_email`),
+and an email problem never blocks a payment — a failed send is retried on the next confirmation.
+
+1. **Database:** run `supabase/migrations/0003_confirmation_emails.sql` in the SQL Editor.
+2. **Function:** paste the updated `supabase/functions/paystack/index.ts` into the `paystack`
+   Edge Function and deploy (Verify JWT stays **off**).
+3. **Secrets** (Edge Functions → Secrets): `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`
+   (e.g. `sandboxXXXX.mailgun.org`), optionally `MAILGUN_FROM` and `MAILGUN_REGION=eu` for EU accounts.
+4. **Sandbox domains** only deliver to *Authorized Recipients* — add your address in Mailgun first.
+   For real customers, add and verify your own domain in Mailgun.
+
 ## Tests
 
 - `supabase/tests/security-tests.sql` — database security rules (45 checks)
-- `supabase/tests/paystack-function.test.mjs` — payment Edge Function (31 checks, fake Paystack)
+- `supabase/tests/paystack-function.test.mjs` — payment + email Edge Function (43 checks, fake Paystack and Mailgun)
 
 Both run against a throwaway local PostgreSQL; see the comments at the top of each file.
 

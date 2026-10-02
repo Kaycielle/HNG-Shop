@@ -122,7 +122,10 @@ export function OrderConfirmationPage() {
         <h1 className="page-title">{paid ? `Thank you, ${order.customer.firstName}!` : 'Order received — awaiting payment'}</h1>
         <p className="page-subtitle">
           {paid
-            ? <>Your payment of <strong>{formatPrice(order.total)}</strong> was received and your order is being prepared.</>
+            ? <>
+                Your payment of <strong>{formatPrice(order.total)}</strong> was received and your order is being prepared.
+                {order.confirmationEmailSentAt && <> We’ve emailed your receipt to <strong>{order.customer.email}</strong>.</>}
+              </>
             : <>Your order has been saved, but it has <strong>not been paid</strong> yet. You haven’t been charged.</>}
         </p>
       </header>

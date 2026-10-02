@@ -9,6 +9,12 @@
  * Secrets (Dashboard → Edge Functions → Secrets):
  *   PAYSTACK_SECRET_KEY  sk_test_… (later sk_live_…) — never put this in the website
  *   SITE_URL             your shop's permanent address, e.g. https://hng-shop-kaylechi.vercel.app
+ * Optional — order confirmation emails (Mailgun):
+ *   MAILGUN_API_KEY      your Mailgun API key — secret, never put this in the website
+ *   MAILGUN_DOMAIN       e.g. sandboxXXXX.mailgun.org (testing) or mg.yourdomain.com
+ *   MAILGUN_FROM         optional, e.g. "Confam NG <orders@mg.yourdomain.com>"
+ *   MAILGUN_REGION       optional: "eu" if your Mailgun account is in the EU region
+ * Without them, payments still work; no email is sent.
  * SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase automatically.
  *
  * Settings: turn OFF "Verify JWT" for this function — Paystack's webhook has no
@@ -44,11 +50,17 @@ interface OrderJson {
   id: string
   userId: string | null
   guestId: string | null
-  customer: { email: string }
+  customer: { firstName: string; lastName: string; email: string; phone: string }
+  delivery: { address: string; city: string; state: string; country: string; postalCode: string }
+  items: { productName: string; unitPrice: number; quantity: number; lineTotal: number }[]
+  subtotal: number
+  shipping: number
   total: number
   currency: string
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'
   paymentReference: string | null
+  confirmationEmailSentAt?: string | null
+  createdAt: string
 }
 
 interface PaystackTransaction {
@@ -127,7 +139,7 @@ async function finalize(tx: PaystackTransaction): Promise<OrderJson | null> {
   }
   const order = await loadOrder(orderId)
   if (!order) return null
-  if (order.paymentStatus === 'paid') return order
+  if (order.paymentStatus === 'paid') return await withConfirmationEmail(order)
   if (tx.currency !== 'NGN' || tx.amount !== order.total * 100) {
     console.error('Amount/currency mismatch', { orderId, paid: tx.amount, currency: tx.currency, expected: order.total * 100 })
     return null
@@ -138,8 +150,133 @@ async function finalize(tx: PaystackTransaction): Promise<OrderJson | null> {
     p_amount_kobo: tx.amount,
   })
   if (error) throw new Error(`Database error: ${error.message}`)
-  // Next step: send the Mailgun confirmation email here.
-  return data as OrderJson
+  return await withConfirmationEmail(data as OrderJson)
+}
+
+// ---------------------------------------------------------------------------
+// Order confirmation email (Mailgun)
+// ---------------------------------------------------------------------------
+const mailgun = {
+  apiKey: (Deno.env.get('MAILGUN_API_KEY') ?? '').trim(),
+  domain: (Deno.env.get('MAILGUN_DOMAIN') ?? '').trim(),
+  from: (Deno.env.get('MAILGUN_FROM') ?? '').trim(),
+  region: (Deno.env.get('MAILGUN_REGION') ?? '').trim().toLowerCase(),
+}
+const storeName = (Deno.env.get('STORE_NAME') ?? 'Confam NG').trim()
+const naira = (n: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n)
+/** Customer-typed text (names, addresses) must never be able to inject HTML into the email. */
+const esc = (s: unknown) =>
+  String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
+
+/**
+ * Sends the confirmation email once per paid order. Never throws: a payment
+ * must succeed even if email is down. If sending fails, the claim is released
+ * so the next confirmation (webhook or page refresh) tries again.
+ */
+async function withConfirmationEmail(order: OrderJson): Promise<OrderJson> {
+  if (order.paymentStatus !== 'paid' || order.confirmationEmailSentAt) return order
+  if (!mailgun.apiKey || !mailgun.domain) {
+    console.log('Mailgun not configured — skipping confirmation email for', order.id)
+    return order
+  }
+  try {
+    const { data: claimed, error } = await admin.rpc('claim_confirmation_email', { p_order_id: order.id })
+    if (error) throw new Error(error.message)
+    if (!claimed) return order // another request already sent it
+    try {
+      await sendConfirmationEmail(order)
+      return { ...order, confirmationEmailSentAt: new Date().toISOString() }
+    } catch (err) {
+      console.error('Confirmation email failed for', order.id, err)
+      await admin.rpc('release_confirmation_email', { p_order_id: order.id })
+      return order
+    }
+  } catch (err) {
+    console.error('Could not record confirmation email for', order.id, err)
+    return order
+  }
+}
+
+export function buildConfirmationEmail(order: OrderJson, site: string) {
+  const c = order.customer
+  const d = order.delivery
+  const orderUrl = site ? `${site}/order/${encodeURIComponent(order.id)}` : ''
+  const address = [d.address, `${d.city}, ${d.state}${d.postalCode ? ` ${d.postalCode}` : ''}`, d.country]
+  const subject = `Your ${storeName} order ${order.id} is confirmed`
+
+  const text = [
+    `Hi ${c.firstName},`,
+    '',
+    `Thank you for shopping with ${storeName}! We've received your payment and your order is being prepared.`,
+    '',
+    `Order number: ${order.id}`,
+    '',
+    ...order.items.map((i) => `- ${i.productName} x ${i.quantity} — ${naira(i.lineTotal)}`),
+    '',
+    `Subtotal: ${naira(order.subtotal)}`,
+    `Delivery: ${order.shipping === 0 ? 'Free' : naira(order.shipping)}`,
+    `Total paid: ${naira(order.total)}`,
+    '',
+    'Delivering to:',
+    `${c.firstName} ${c.lastName}`,
+    ...address,
+    `Phone: ${c.phone}`,
+    '',
+    ...(orderUrl ? [`View your order: ${orderUrl}`, ''] : []),
+    `— The ${storeName} team`,
+  ].join('\n')
+
+  const rows = order.items
+    .map(
+      (i) => `<tr>
+        <td style="padding:10px 0;border-bottom:1px solid #eee;">${esc(i.productName)}<br><span style="color:#777;font-size:13px;">${i.quantity} × ${esc(naira(i.unitPrice))}</span></td>
+        <td style="padding:10px 0;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;">${esc(naira(i.lineTotal))}</td>
+      </tr>`,
+    )
+    .join('')
+  const html = `<!doctype html><html><body style="margin:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#111;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 12px;"><tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden;">
+      <tr><td style="background:#09090b;padding:20px 28px;color:#fff;font-size:18px;font-weight:bold;letter-spacing:2px;">
+        CONFAM <span style="color:#ff4d57;font-size:12px;border:1px solid #df2531;border-radius:4px;padding:2px 5px;">NG</span>
+      </td></tr>
+      <tr><td style="padding:28px;">
+        <h1 style="margin:0 0 8px;font-size:22px;">Thank you, ${esc(c.firstName)}!</h1>
+        <p style="margin:0 0 20px;color:#444;line-height:1.5;">We've received your payment and your order is being prepared.</p>
+        <p style="margin:0 0 4px;color:#777;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Order number</p>
+        <p style="margin:0 0 20px;font-family:monospace;font-size:16px;">${esc(order.id)}</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">${rows}
+          <tr><td style="padding:10px 0 2px;color:#555;">Subtotal</td><td style="padding:10px 0 2px;text-align:right;">${esc(naira(order.subtotal))}</td></tr>
+          <tr><td style="padding:2px 0;color:#555;">Delivery</td><td style="padding:2px 0;text-align:right;">${order.shipping === 0 ? 'Free' : esc(naira(order.shipping))}</td></tr>
+          <tr><td style="padding:10px 0;font-weight:bold;font-size:16px;border-top:1px solid #ddd;">Total paid</td><td style="padding:10px 0;font-weight:bold;font-size:16px;text-align:right;border-top:1px solid #ddd;">${esc(naira(order.total))}</td></tr>
+        </table>
+        <p style="margin:20px 0 4px;color:#777;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Delivering to</p>
+        <p style="margin:0;line-height:1.5;">${esc(`${c.firstName} ${c.lastName}`)}<br>${address.map(esc).join('<br>')}<br>${esc(c.phone)}</p>
+        ${orderUrl ? `<p style="margin:28px 0 0;"><a href="${esc(orderUrl)}" style="background:#df2531;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:bold;display:inline-block;">View your order</a></p>` : ''}
+      </td></tr>
+      <tr><td style="padding:18px 28px;background:#fafafa;color:#888;font-size:12px;">You're receiving this because you placed an order with ${esc(storeName)}.</td></tr>
+    </table>
+  </td></tr></table></body></html>`
+
+  return { subject, text, html }
+}
+
+async function sendConfirmationEmail(order: OrderJson) {
+  const { subject, text, html } = buildConfirmationEmail(order, siteUrl)
+  const base = mailgun.region === 'eu' ? 'https://api.eu.mailgun.net' : 'https://api.mailgun.net'
+  const form = new FormData()
+  form.append('from', mailgun.from || `${storeName} <orders@${mailgun.domain}>`)
+  form.append('to', `${order.customer.firstName} ${order.customer.lastName} <${order.customer.email}>`)
+  form.append('subject', subject)
+  form.append('text', text)
+  form.append('html', html)
+  const res = await fetch(`${base}/v3/${encodeURIComponent(mailgun.domain)}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Basic ${btoa(`api:${mailgun.apiKey}`)}` },
+    body: form,
+  })
+  if (!res.ok) throw new Error(`Mailgun ${res.status}: ${(await res.text()).slice(0, 300)}`)
+  console.log('Confirmation email sent for', order.id)
 }
 
 /** Constant-time check of Paystack's HMAC-SHA512 webhook signature. */
@@ -184,7 +321,7 @@ async function initialize(req: Request, body: Record<string, unknown>) {
 
 async function verify(req: Request, body: Record<string, unknown>) {
   const order = await orderForCaller(req, body.orderId, body.guestId)
-  if (order.paymentStatus === 'paid') return { paid: true, order }
+  if (order.paymentStatus === 'paid') return { paid: true, order: await withConfirmationEmail(order) }
   const reference = typeof body.reference === 'string' ? body.reference : order.paymentReference
   if (!reference || !reference.startsWith(`${order.id}-`)) return { paid: false, message: 'No payment was found for this order yet.' }
   const tx = await paystack<PaystackTransaction>(`/transaction/verify/${encodeURIComponent(reference)}`)
